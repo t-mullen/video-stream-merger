@@ -3,7 +3,7 @@ Merge multiple video-only HTML5 MediaStreams.
 Useful for sending composite videos across a single WebRTC MediaConnection.
 
 Example:
-```
+```javascript
 var width = 500,
     height = 500,
     fps = 30;
