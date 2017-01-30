@@ -19,3 +19,7 @@ videoMerger.merge(); // Begin merging the videos (the result is now available)
 
 videoMerger.result; // The result is the composite video stream
 ```
+
+## Limitations:
+- Audio will be stripped. Video only.
+- Resolution and framerate will be slightly reduced.
