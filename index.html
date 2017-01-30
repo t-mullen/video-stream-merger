@@ -1,0 +1,46 @@
+<html>
+    <body>
+        <h3>HTML5 video-stream-merger demo.</h3>
+        <p>This demo clones your webcam video stream 6 times and merges the streams together.</p>
+        <p>There is only one video element visible.</p>
+    <video class="displayVideo"></video>
+
+    <script src="video-stream-merge.js"></script>
+    <script>
+        navigator.getUserMedia = navigator.getUserMedia ||
+                                 navigator.webkitGetUserMedia ||
+                                 navigator.mozGetUserMedia;
+
+        if (navigator.getUserMedia) {
+           navigator.getUserMedia({ audio: false, video: { width: 1280, height: 720 } },
+              function(stream) {
+                var videoMerger = new VideoStreamMerger(500, 500, 25); // Create a merger with a 500pixel resolution and fps of 25
+               
+                // Add streams
+                videoMerger.addStream(stream, 0, 0, 500, 500); 
+                videoMerger.addStream(stream, 0, 0, 100, 100);
+               
+                videoMerger.merge();
+               
+                // Streams can still be added after merging has begun
+                videoMerger.addStream(stream, 100, 0, 100, 100);
+                videoMerger.addStream(stream, 200, 0, 100, 100);
+                videoMerger.addStream(stream, 300, 0, 100, 100);
+                videoMerger.addStream(stream, 400, 0, 100, 100);
+               
+                // Display the result in a video element
+                var video = document.querySelector('.displayVideo');
+                video.srcObject = videoMerger.result;
+                video.play();
+              },
+              function(err) {
+                 console.log("The following error occurred: " + err.name);
+              }
+           );
+        } else {
+           console.log("getUserMedia not supported");
+        }
+    
+    </script>
+    </body>
+</html>
