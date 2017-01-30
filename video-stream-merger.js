@@ -11,7 +11,7 @@ window.requestAnimationFrame = window.requestAnimationFrame ||
                                window.msRequestAnimationFrame ||
                                window.oRequestAnimationFrame;
 
-function videoStreamMerger(width, height, fps) {
+function VideoStreamMerger(width, height, fps) {
     
     if (fps === undefined) {
         fps = 25;
