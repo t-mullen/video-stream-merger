@@ -51,7 +51,6 @@ function VideoStreamMerger(width, height, fps) {
             for (var i=0; i<streams.length; i++){
                 ctx.drawImage(streams[i].video, streams[i].x, streams[i].y, streams[i].width, streams[i].height);
             }
-            
             requestAnimationFrame(drawLoop);
         }
         requestAnimationFrame(drawLoop);
