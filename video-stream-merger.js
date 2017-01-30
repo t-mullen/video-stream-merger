@@ -20,7 +20,7 @@ function VideoStreamMerger(width, height, fps) {
     document.body.appendChild(canvas);
     var ctx = canvas.getContext('2d');
     
-    // Hidden stream container for dynamic loading of video
+    // Hidden stream container for preloading of video
     var streamContainer = document.createElement('div');
     document.body.appendChild(streamContainer);
     
