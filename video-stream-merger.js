@@ -42,7 +42,6 @@ function VideoStreamMerger(width, height, fps) {
             width : width,
             height : height
         });
-        
     };
     
     this.merge = function merge() {
