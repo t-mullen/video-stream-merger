@@ -22,5 +22,5 @@ videoMerger.result; // The result is the composite video stream
 ```
 
 ## Limitations:
-- Audio will be stripped. Video only.
+- Output stream will have no audio. (Merge audio streams seperately with WebAudio API)
 - Resolution and framerate will be slightly reduced.
