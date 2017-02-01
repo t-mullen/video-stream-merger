@@ -1,5 +1,5 @@
 # video-stream-merger
-Merge multiple video-only HTML5 MediaStreams.   
+Merge the video of multiple MediaStreams.   
 Useful for sending composite videos across a single WebRTC MediaConnection.  
 [Demo](https://rationalcoding.github.io/video-stream-merger/)
 
