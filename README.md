@@ -40,5 +40,5 @@ merger.stop() // Stop merging (stream will freeze, can be restarted)
 merger.destroy() // Clean up (stream will stop, cannot be restarted)
 ```
 
-## Limitations:
+## Current Limitations:
 - Output stream will have no audio. (Merge audio streams separately with WebAudio API)
