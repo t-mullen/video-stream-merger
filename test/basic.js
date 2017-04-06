@@ -51,10 +51,26 @@ test('e2e', function (t) {
     t.pass('video can play')
 
     window.setTimeout(function () {
-      merger.destroy()
-      t.pass('destroyed')
-      t.end()
-    }, 5000)
+      merger.removeStream(mediaStream)
+      t.pass('removed')
+      
+      window.setTimeout(function () {
+        merger.addStream(mediaStream, {
+          draw: function (ctx, frame, done) {
+            ctx.drawImage(frame, 0, 0, 150, 150)
+            done()
+          }
+        })
+        t.pass('readded')
+      
+        window.setTimeout(function () {
+          merger.destroy()
+          t.pass('destroyed')
+          t.end()
+        }, 4000)
+      }, 2000)
+      
+    }, 4000)
   }
   playVideo.src = window.URL.createObjectURL(merger.result)
 })
