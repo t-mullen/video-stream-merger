@@ -24,7 +24,7 @@ var screenrecord = require('screen-record')
 getusermedia({video: true, audio:true}, function (err, webcamStream) {
   screenRecord(window, function (err, sourceId, constraints) {
     getusermedia(constraints, function (err, screenStream) {
-      // We not have 2 streams: webcamStream, screenStream
+      // We now have 2 streams: webcamStream, screenStream
     })
   })
 })
@@ -34,12 +34,7 @@ We want to overlay the webcam stream in the corner of the screen stream.
 ```javascript
 var VideoStreamMerger = require('video-stream-merger')
 
-// Decide on the details of the output stream. Below are the defaults.
-merger = new VideoStreamMerger({
-  width: 400,
-  height: 300,
-  fps: 25
-})
+var merger = new VideoStreamMerger()
 
 // Add the screen capture. Position it to fill the whole stream (the default)
 merger.addStream(screenStream, {
