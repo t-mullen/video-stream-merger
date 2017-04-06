@@ -127,6 +127,7 @@ VideoStreamMerger.prototype._draw = function () {
     if (awaiting <= 0) window.requestAnimationFrame(self._draw.bind(self))
   }
 
+  self._ctx.clearRect(0, 0, self.width, self.height)
   self._videos.forEach(function (video) {
     if (video.draw) { // custom frame transform
       video.draw(self._ctx, video.element, done)
