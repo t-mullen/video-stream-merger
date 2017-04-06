@@ -64,8 +64,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     video.src = window.URL.createObjectURL(mediaStream)
 
     if (!opts.mute) {
-      var audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
-      audioSource.connect(self._audioDestination)
+      opts.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
+      opts.audioSource.connect(self._audioDestination)
     }
   }
 
@@ -81,9 +81,18 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
 
   for (var i = 0; i < self._videos.length; i++) {
     if (mediaStream.id === self._videos[i].id) {
-      self._container.removeChild(self._videos[i].element)
+      if (!found) {
+        self._container.removeChild(self._videos[i].element)
+      }
+
+      if (self._videos[i].audioSource) {
+        self._videos[i].audioSource.disconnect(self._audioDestination)
+        self._videos[i].audioSource = null
+      }
+
       self._videos[i] = null
       self._videos.splice(i, 1)
+      i--
       found = true // keep going, duplicates
     }
   }
@@ -116,9 +125,10 @@ VideoStreamMerger.prototype._draw = function () {
   var awaiting = self._videos.length
   function done () {
     awaiting--
-    if (!awaiting) window.requestAnimationFrame(self._draw.bind(self))
+    if (awaiting <= 0) window.requestAnimationFrame(self._draw.bind(self))
   }
 
+  self._ctx.clearRect(0, 0, self.width, self.height)
   self._videos.forEach(function (video) {
     if (video.draw) { // custom frame transform
       video.draw(self._ctx, video.element, done)
@@ -127,6 +137,8 @@ VideoStreamMerger.prototype._draw = function () {
       done()
     }
   })
+
+  if (self._videos.length === 0) done()
 }
 
 VideoStreamMerger.prototype.destroy = function () {
