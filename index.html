@@ -1,46 +1,83 @@
-<html>
-    <body>
-        <h3>HTML5 video-stream-merger demo.</h3>
-        <p>This demo clones your webcam video stream 6 times and merges the streams together.</p>
-        <p>There is only one video element visible.</p>
-    <video class="displayVideo"></video>
-
-    <script src="video-stream-merger.js"></script>
-    <script>
-        navigator.getUserMedia = navigator.getUserMedia ||
-                                 navigator.webkitGetUserMedia ||
-                                 navigator.mozGetUserMedia;
-
-        if (navigator.getUserMedia) {
-           navigator.getUserMedia({ audio: false, video: { width: 1280, height: 720 } },
-              function(stream) {
-                var videoMerger = new VideoStreamMerger(500, 500, 25); // Create a merger with a 500pixel resolution and fps of 25
-               
-                // Add streams
-                videoMerger.addStream(stream, 0, 0, 500, 500); 
-                videoMerger.addStream(stream, 0, 0, 100, 100);
-               
-                videoMerger.merge();
-               
-                // Streams can still be added after merging has begun
-                videoMerger.addStream(stream, 100, 0, 100, 100);
-                videoMerger.addStream(stream, 200, 0, 100, 100);
-                videoMerger.addStream(stream, 300, 0, 100, 100);
-                videoMerger.addStream(stream, 400, 0, 100, 100);
-               
-                // Display the result in a video element
-                var video = document.querySelector('.displayVideo');
-                video.srcObject = videoMerger.result;
-                video.play();
-              },
-              function(err) {
-                 console.log("The following error occurred: " + err.name);
-              }
-           );
-        } else {
-           console.log("getUserMedia not supported");
-        }
+<html lang="en">
+  <head>
+    <title>Demo</title>
+  </head>
+  <body>
+    <h1>video-stream-merger demo</h1>
     
-    </script>
-    </body>
+    <h3>Composite videos</h3>
+    <video muted autoplay id="composite"></video>
+    
+    <h3>Resize/Stretch</h3>
+    <video muted autoplay id="resizing"></video>
+    
+    <h3>Crop/Zoom</h3>
+    <video muted autoplay id="cropping"></video>
+    
+    <h3>Custom effects</h3>
+    <video muted autoplay id="custom"></video>
+    
+    <br><br>
+  
+  </body>
+  <script src="dist/video-stream-merger.js"></script>
+  
+  <script>
+    var players = document.querySelectorAll('video')
+    
+    navigator.getUserMedia({video:true, audio:true}, function (mediaStream) {      
+      // Composite videos
+      var composite = new VideoStreamMerger()
+      composite.addStream(mediaStream)
+      composite.addStream(mediaStream, {
+        width: 50,
+        height: 50
+      })
+      composite.addStream(mediaStream, {
+        x: composite.width - 50,
+        y: composite.height - 50,
+        width: 50,
+        height: 50
+      })
+      composite.start()
+      players[0].src = window.URL.createObjectURL(composite.result)
+      
+      // Resizing videos
+      var resizing = new VideoStreamMerger({
+        height: 200,
+        width: 1000
+      })
+      resizing.addStream(mediaStream)
+      resizing.start()
+      players[1].src = window.URL.createObjectURL(resizing.result)
+      
+      // Cropping videos
+      var cropping = new VideoStreamMerger()
+      cropping.addStream(mediaStream, {
+        x: -300,
+        y: -300,
+        width: cropping.width+300,
+        height: cropping.height+300
+      })
+      cropping.start()
+      players[2].src = window.URL.createObjectURL(cropping.result)
+      
+      var custom = new VideoStreamMerger()
+      custom.addStream(mediaStream, {
+        draw : function (ctx, frame, done) {
+          ctx.clearRect(0,0,custom.width, custom.height)
+          ctx.translate(custom.width/2, custom.height/2)
+          ctx.rotate(0.1)
+          ctx.drawImage(frame, -custom.width/2, -custom.height/2, custom.width, custom.height)
+          ctx.translate(-custom.width/2, -custom.height/2)
+          ctx.filter = 'blur(5px) grayscale(100%)'
+          done()
+        }
+      })
+      custom.start()
+      players[3].src = window.URL.createObjectURL(custom.result)
+
+    }, function (err){ alert(err) })
+
+  </script>
 </html>

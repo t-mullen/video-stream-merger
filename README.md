@@ -5,20 +5,39 @@ Useful for sending composite videos across a single WebRTC MediaConnection.
 
 **Example:**
 ```javascript
-var width = 500,
-    height = 500,
-    fps = 30;
-    
-var x = 0, y = 0;
+// Create a new VideoStreamMerger with an output width, height and fps
+var merger = new VideoStreamMerger({
+  width: 300,
+  height: 300,
+  fps: 25
+}) 
 
-var videoMerger = new VideoStreamMerger(width, height, fps); // Create a new videoMerger with an output width, height and fps
+// Add one stream the full size of the stream
+merger.addStream(inputStream)
 
-videoMerger.addStream(inputStream, x, y, width, height); // Add one stream the full size of the stream
-videoMerger.addStream(anotherStream, 0, 0, 100, 100); // Add another stream at the top-left, 100 pixels wide and tall
+// Add another stream at the top-left, 100 pixels wide and tall
+merger.addStream(anotherStream, {
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100
+}) 
 
-videoMerger.merge(); // Begin merging the videos (the result is now available)
+// Or draw the frames yourself
+merger.addStream(anotherStream, {
+  draw: function (ctx, frame, done) {
+    ctx.drawImage(frame, 5, 3, 100, 100)
+    done()
+  }
+})
 
-videoMerger.result; // The result is the composite video stream
+merger.start() // Begin merging the videos (the result is now available)
+
+merger.result // The result is the composite MediaStream
+
+merger.stop() // Stop merging (stream will freeze, can be restarted)
+
+merger.destroy() // Clean up (stream will stop, cannot be restarted)
 ```
 
 ## Limitations:
