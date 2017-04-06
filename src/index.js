@@ -1,5 +1,8 @@
+/* globals window, AudioContext */
 
 module.exports = VideoStreamMerger
+
+window.AudioContext = window.AudioContext || window.webkitAudioContext
 
 function VideoStreamMerger (opts) {
   var self = this
@@ -25,6 +28,9 @@ function VideoStreamMerger (opts) {
 
   self._videos = []
 
+  self._audioCtx = new AudioContext()
+  self._audioDestination = self._audioCtx.createMediaStreamDestination()
+
   self.started = false
   self.result = null
 }
@@ -38,10 +44,10 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   opts.y = opts.y || 0
   opts.width = opts.width || self.width
   opts.height = opts.height || self.height
-  opts.rotation = opts.rotation || 0
-  opts.transform = opts.transform || null
+  opts.draw = opts.draw || null
+  opts.mute = opts.mute || false
 
-  // If it is the same MediaStream, we can reuse our video element
+  // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var video = null
   for (var i = 0; i < self._videos.length; i++) {
     if (self._videos[i].id === mediaStream.id) {
@@ -55,6 +61,11 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     video.muted = true
     self._container.appendChild(video)
     video.src = window.URL.createObjectURL(mediaStream)
+
+    if (!opts.mute) {
+      var audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
+      audioSource.connect(self._audioDestination)
+    }
   }
 
   opts.element = video
@@ -84,7 +95,17 @@ VideoStreamMerger.prototype.start = function () {
 
   self.started = true
   window.requestAnimationFrame(self._draw.bind(self))
+
+  // Add video
   self.result = self._canvas.captureStream(self.fps)
+
+  // Remove "dead" audio track
+  var deadTrack = self.result.getAudioTracks()[0]
+  if (deadTrack) self.result.removeTrack(deadTrack)
+
+  // Add audio
+  var audioTracks = self._audioDestination.stream.getAudioTracks()
+  self.result.addTrack(audioTracks[0])
 }
 
 VideoStreamMerger.prototype._draw = function () {
@@ -107,12 +128,6 @@ VideoStreamMerger.prototype._draw = function () {
   })
 }
 
-VideoStreamMerger.prototype.stop = function () {
-  var self = this
-
-  self.started = false
-}
-
 VideoStreamMerger.prototype.destroy = function () {
   var self = this
 
@@ -125,6 +140,13 @@ VideoStreamMerger.prototype.destroy = function () {
   self._ctx = null
   self._container = null
   self._videos = []
+  self._audioCtx = null
+  self._audioDestination = null
+
+  self.result.getTracks().forEach(function (t) {
+    t.stop()
+  })
+  self.result = null
 }
 
 module.exports = VideoStreamMerger

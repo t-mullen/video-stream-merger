@@ -1,6 +1,7 @@
 # video-stream-merger
 Merge the video of multiple MediaStreams.   
-Useful for sending composite videos across a single WebRTC MediaConnection.  
+Also merges the audio via the WebAudio API.  
+Useful for sending composite videos across a single WebRTC MediaConnection. 
 [Demo](https://rationalcoding.github.io/video-stream-merger/)
 
 `npm install video-stream-merger`
@@ -22,7 +23,8 @@ merger.addStream(anotherStream, {
   x: 0,
   y: 0,
   width: 100,  // stretch stream to be 100px by 100px
-  height: 100
+  height: 100,
+  muted: false
 }) 
 
 // Or draw the frames yourself
@@ -37,10 +39,5 @@ merger.start() // Begin merging the videos (the result is now available)
 
 merger.result // The result is the composite MediaStream
 
-merger.stop() // Stop merging (stream will freeze, can be restarted)
-
 merger.destroy() // Clean up (stream will stop, cannot be restarted)
 ```
-
-## Current Limitations:
-- Output stream will have no audio. (Merge audio streams separately with WebAudio API)

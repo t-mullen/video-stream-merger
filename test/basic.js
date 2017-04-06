@@ -51,14 +51,9 @@ test('e2e', function (t) {
     t.pass('video can play')
 
     window.setTimeout(function () {
-      merger.stop()
-      merger.start()
-      t.pass('stopped and started')
-      window.setTimeout(function () {
-        merger.destroy()
-        t.pass('destroyed')
-        t.end()
-      }, 5000)
+      merger.destroy()
+      t.pass('destroyed')
+      t.end()
     }, 5000)
   }
   playVideo.src = window.URL.createObjectURL(merger.result)
