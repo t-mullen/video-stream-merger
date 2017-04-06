@@ -1,6 +1,10 @@
 # video-stream-merger
+
+[![Standard - JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+
 Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio API.  
-Useful for sending composite videos across a single WebRTC MediaConnection, or hot-swapping streams without stopping.  
+
+For sending composite videos across a single WebRTC MediaConnection, hot-swapping streams without stopping, or just editing live video streams.  
 
 [Live Demo](https://rationalcoding.github.io/video-stream-merger/)
 
