@@ -4,7 +4,10 @@
 
 Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio API.  
 
-For sending composite videos across a single WebRTC MediaConnection, hot-swapping streams without stopping, or just editing live video streams.  
+- Send multiple videos over a single WebRTC MediaConnection
+- Hotswap streams without worrying about renegotation or delays
+- Crop, scale, and rotate live video
+- Add crazy effects through the canvas API
 
 [Live Demo](https://rationalcoding.github.io/video-stream-merger/)
 
