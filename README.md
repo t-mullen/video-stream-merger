@@ -11,7 +11,7 @@ For sending composite videos across a single WebRTC MediaConnection, hot-swappin
 ## install
 
 ```
-npm install simple-peer
+npm install video-stream-merger
 ```
 
 ## usage
