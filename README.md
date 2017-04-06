@@ -7,8 +7,8 @@ Useful for sending composite videos across a single WebRTC MediaConnection.
 ```javascript
 // Create a new VideoStreamMerger with an output width, height and fps
 var merger = new VideoStreamMerger({
-  width: 300,
-  height: 300,
+  width: 400,
+  height: 300,  // Omit options to use these defaults
   fps: 25
 }) 
 
@@ -19,7 +19,7 @@ merger.addStream(inputStream)
 merger.addStream(anotherStream, {
   x: 0,
   y: 0,
-  width: 100,
+  width: 100,  // stretch stream to be 100px by 100px
   height: 100
 }) 
 
