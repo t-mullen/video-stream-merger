@@ -3,6 +3,8 @@ Merge the video of multiple MediaStreams.
 Useful for sending composite videos across a single WebRTC MediaConnection.  
 [Demo](https://rationalcoding.github.io/video-stream-merger/)
 
+`npm install video-stream-merger`
+
 **Example:**
 ```javascript
 // Create a new VideoStreamMerger with an output width, height and fps
