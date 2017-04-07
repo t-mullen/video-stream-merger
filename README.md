@@ -9,7 +9,9 @@ Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio
 - Crop, scale, and rotate live video
 - Add crazy effects through the canvas API
 
-[Live Demo](https://rationalcoding.github.io/video-stream-merger/)
+[Demo](https://rationalcoding.github.io/video-stream-merger/)
+
+[P2P Demo](https://rationalcoding.github.io/video-stream-merger/p2p.html)
 
 ## install
 
