@@ -1,0 +1,95 @@
+<html lang="en">
+  <head>
+    <style>
+      .wrapper {
+        max-height: 160px;
+        overflow: hidden;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>P2P Demo</h1>
+    <p>Webcam stream is cloned to make several streams, which are merged together and sent over a single WebRTC MediaConnection.</p>
+    <p>No renegotiation ever occurs. No extra bandwidth is used to send more streams.</p>
+    <p>Resolution can be improved at the cost of higher latency.</p>
+    
+    <h3>Sending Peer</h3>
+    <div class="wrapper">
+      <video autoplay id="one" style="display:inline-block; width: 200px; background:black;"></video>
+    </div>
+    <h3>Receiving Peer</h3>
+    <div class="wrapper">
+      <video autoplay id="two" style="display:inline-block; width: 200px; background:black;"></video>
+    </div>
+    <br>
+    <button>Add Stream</button>
+    <button>Remove Stream</button>
+  </body>
+  <script src="dist/video-stream-merger.js"></script>
+  <script src="demo/getusermedia.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/7.0.0/simplepeer.min.js"></script>
+  <script>
+    var CANVAS_MULTIPLIER = 3
+    
+    var players = document.querySelectorAll('video')
+    var buttons = document.querySelectorAll('button')
+  
+    getusermedia({audio:true, video:true}, function (err, webcam) {
+      if (err) throw err
+      
+      var merger = new VideoStreamMerger({
+        width: 400*CANVAS_MULTIPLIER,
+        height: 300*CANVAS_MULTIPLIER
+      })
+      merger.start()
+      
+      players[0].src = window.URL.createObjectURL(merger.result)
+      
+      var peer1 = new SimplePeer({initiator: true, stream:merger.result})
+      var peer2 = new SimplePeer()
+      
+      peer1.on('signal', function (data) {
+        peer2.signal(data)
+      })
+      peer2.on('signal', function (data) {
+        peer1.signal(data)
+      })
+      
+      peer2.on('stream', function (stream) {
+        players[1].src = window.URL.createObjectURL(stream)
+      })
+       
+      var numStreams = 0
+      var curStream = 0
+      var clones = []
+      
+      buttons[0].addEventListener('click', function () {
+        clones.push(webcam.clone())
+        merger.addStream(clones[clones.length-1], {
+          mute: numStreams > 0,
+          draw: function (ctx, frame, done) {
+            if (curStream >= numStreams) curStream = 0
+      
+            var unit = merger.width / numStreams
+            ctx.drawImage(frame, unit*curStream, 0, unit, merger.height/numStreams)
+            
+            curStream++
+            done()
+          }
+        })
+        numStreams++
+        players[0].style.width = 200*numStreams+'px'
+        players[1].style.width = 200*numStreams+'px'
+      })
+      
+      buttons[1].addEventListener('click', function () {
+        merger.removeStream(clones.pop())
+        numStreams--
+        players[0].style.width = 200*numStreams+'px'
+        players[1].style.width = 200*numStreams+'px'
+      })
+      
+    })
+  
+  </script>
+</html>
