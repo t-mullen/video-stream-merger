@@ -21,11 +21,14 @@
   
   </body>
   <script src="dist/video-stream-merger.js"></script>
+  <script src="demo/getusermedia.js"></script>
   
   <script>
     var players = document.querySelectorAll('video')
     
-    navigator.getUserMedia({video:true, audio:true}, function (mediaStream) {      
+    getusermedia({video:true, audio:true}, function (err, mediaStream) { 
+      if (err) throw err
+      
       // Composite videos
       var composite = new VideoStreamMerger()
       composite.addStream(mediaStream)
@@ -77,7 +80,7 @@
       custom.start()
       players[3].src = window.URL.createObjectURL(custom.result)
 
-    }, function (err){ alert(err) })
+    })
 
   </script>
 </html>
