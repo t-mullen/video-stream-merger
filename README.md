@@ -128,6 +128,8 @@ This library makes it easy to change streams in a WebRTC connection without need
 
 The result MediaStream will appear to be constant and stable, no matter what streams you add/remove!
 
+[P2P Streaming Demo](https://rationalcoding.github.io/video-stream-merger/p2p.html)
+
 ## Custom Draw Function
 
 If sizing and poisitioning aren't enough, you can directly draw the video frames by passing a function to the `draw` option.
