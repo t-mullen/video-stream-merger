@@ -93,8 +93,8 @@ Optional `opts` defaults to the below:
 {
   x: 0, // position of the top-left corner
   y: 0,
-  width: '<width of output>',     // size to draw the stream
-  height: '<height of output>',
+  width: <width of output>,     // size to draw the stream
+  height: <height of output>,
   mute: false,  // if true, any audio tracks will not be merged
   draw: null    // A custom drawing function (see below)
 }
