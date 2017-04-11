@@ -13,6 +13,8 @@ Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio
 
 [P2P Demo](https://rationalcoding.github.io/video-stream-merger/p2p.html)
 
+Check out [jumpstreamer](https://github.com/RationalCoding/jumpstreamer), which uses this package.  
+
 ## install
 
 ```
