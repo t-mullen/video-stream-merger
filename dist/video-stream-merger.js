@@ -4,11 +4,22 @@
 module.exports = VideoStreamMerger
 
 window.AudioContext = window.AudioContext || window.webkitAudioContext
+var audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination)
+var canvasSupport = !!document.createElement('canvas').captureStream
+var supported = audioSupport && canvasSupport
 
 function VideoStreamMerger (opts) {
   var self = this
   if (!(self instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
+  self.supported = supported
+
+  if (!supported) {
+    self._fallbackStream = null
+    self.started = false
+    self.result = null
+    return
+  }
   opts = opts || {}
   self.width = opts.width || 400
   self.height = opts.height || 300
@@ -38,6 +49,13 @@ function VideoStreamMerger (opts) {
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
+
+  if (!supported) {
+    if (!self._fallbackStream) {
+      self._fallbackStream = mediaStream
+    }
+    return
+  }
 
   opts = opts || {}
 
@@ -77,6 +95,13 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   var self = this
 
+  if (!supported) {
+    if (self._fallbackStream === mediaStream) {
+      self._fallbackStream = null
+    }
+    return
+  }
+
   var found = false
 
   for (var i = 0; i < self._videos.length; i++) {
@@ -102,6 +127,11 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
 
 VideoStreamMerger.prototype.start = function () {
   var self = this
+
+  if (!supported) {
+    self.result = self._fallbackStream
+    return
+  }
 
   self.started = true
   window.requestAnimationFrame(self._draw.bind(self))
@@ -146,15 +176,17 @@ VideoStreamMerger.prototype.destroy = function () {
 
   self.started = false
 
-  document.body.removeChild(self._canvas)
-  document.body.removeChild(self._container)
+  if (supported) {
+    document.body.removeChild(self._canvas)
+    document.body.removeChild(self._container)
 
-  self._canvas = null
-  self._ctx = null
-  self._container = null
-  self._videos = []
-  self._audioCtx = null
-  self._audioDestination = null
+    self._canvas = null
+    self._ctx = null
+    self._container = null
+    self._videos = []
+    self._audioCtx = null
+    self._audioDestination = null
+  }
 
   self.result.getTracks().forEach(function (t) {
     t.stop()
