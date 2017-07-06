@@ -46,7 +46,7 @@
         })
         merger.start()
 
-        players[0].src = window.URL.createObjectURL(merger.result)
+        players[0].srcObject = merger.result
 
         var peer1 = new SimplePeer({initiator: true, stream:merger.result})
         var peer2 = new SimplePeer()
@@ -59,7 +59,7 @@
         })
 
         peer2.on('stream', function (stream) {
-          players[1].src = window.URL.createObjectURL(stream)
+          players[1].srcObject = stream
         })
 
         var numStreams = 0

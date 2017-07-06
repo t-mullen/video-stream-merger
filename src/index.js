@@ -78,7 +78,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     video.autoplay = true
     video.muted = true
     self._container.appendChild(video)
-    video.src = window.URL.createObjectURL(mediaStream)
+    video.srcObject = mediaStream
 
     if (!opts.mute) {
       opts.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
