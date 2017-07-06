@@ -30,13 +30,7 @@ function VideoStreamMerger (opts) {
   self._canvas.setAttribute('width', self.width)
   self._canvas.setAttribute('height', self.height)
   self._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none') // Push off screen
-  document.body.appendChild(self._canvas)
   self._ctx = self._canvas.getContext('2d')
-
-  // Hidden div to contain video elements
-  self._container = document.createElement('div')
-  self._container.setAttribute('style', 'display:none')
-  document.body.appendChild(self._container)
 
   self._videos = []
 
@@ -78,7 +72,6 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     video = document.createElement('video')
     video.autoplay = true
     video.muted = true
-    self._container.appendChild(video)
     video.srcObject = mediaStream
 
     if (!opts.mute) {
@@ -177,12 +170,8 @@ VideoStreamMerger.prototype.destroy = function () {
   self.started = false
 
   if (supported) {
-    document.body.removeChild(self._canvas)
-    document.body.removeChild(self._container)
-
     self._canvas = null
     self._ctx = null
-    self._container = null
     self._videos = []
     self._audioCtx = null
     self._audioDestination = null
