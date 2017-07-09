@@ -1,23 +1,17 @@
-/* globals window, AudioContext */
+/* globals window */
 
 module.exports = VideoStreamMerger
-
-window.AudioContext = window.AudioContext || window.webkitAudioContext
-var audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination)
-var canvasSupport = !!document.createElement('canvas').captureStream
-var supported = audioSupport && canvasSupport
 
 function VideoStreamMerger (opts) {
   var self = this
   if (!(self instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
-  self.supported = supported
-
+  var AudioContext = window.AudioContext || window.webkitAudioContext
+  var audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination)
+  var canvasSupport = !!document.createElement('canvas').captureStream
+  var supported = audioSupport && canvasSupport
   if (!supported) {
-    self._fallbackStream = null
-    self.started = false
-    self.result = null
-    return
+    throw new Error('Unsupported browser')
   }
   opts = opts || {}
   self.width = opts.width || 400
@@ -42,13 +36,6 @@ function VideoStreamMerger (opts) {
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
-
-  if (!supported) {
-    if (!self._fallbackStream) {
-      self._fallbackStream = mediaStream
-    }
-    return
-  }
 
   opts = opts || {}
 
@@ -87,21 +74,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   var self = this
 
-  if (!supported) {
-    if (self._fallbackStream === mediaStream) {
-      self._fallbackStream = null
-    }
-    return
-  }
-
-  var found = false
-
   for (var i = 0; i < self._videos.length; i++) {
     if (mediaStream.id === self._videos[i].id) {
-      if (!found) {
-        self._container.removeChild(self._videos[i].element)
-      }
-
       if (self._videos[i].audioSource) {
         self._videos[i].audioSource.disconnect(self._audioDestination)
         self._videos[i].audioSource = null
@@ -110,20 +84,12 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       self._videos[i] = null
       self._videos.splice(i, 1)
       i--
-      found = true // keep going, duplicates
     }
   }
-
-  if (!found) throw new Error('Provided stream was never added')
 }
 
 VideoStreamMerger.prototype.start = function () {
   var self = this
-
-  if (!supported) {
-    self.result = self._fallbackStream
-    return
-  }
 
   self.started = true
   window.requestAnimationFrame(self._draw.bind(self))
@@ -168,13 +134,11 @@ VideoStreamMerger.prototype.destroy = function () {
 
   self.started = false
 
-  if (supported) {
-    self._canvas = null
-    self._ctx = null
-    self._videos = []
-    self._audioCtx = null
-    self._audioDestination = null
-  }
+  self._canvas = null
+  self._ctx = null
+  self._videos = []
+  self._audioCtx = null
+  self._audioDestination = null
 
   self.result.getTracks().forEach(function (t) {
     t.stop()
