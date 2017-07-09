@@ -26,7 +26,6 @@
     <br><br>
   
     
-  </body>
   <script src="dist/video-stream-merger.js"></script>
   <script src="demo/getusermedia.js"></script>
   
@@ -50,7 +49,7 @@
         height: 50
       })
       composite.start()
-      players[0].src = window.URL.createObjectURL(composite.result)
+      players[0].srcObject = composite.result
       
       // Resizing videos
       var resizing = new VideoStreamMerger({
@@ -59,7 +58,7 @@
       })
       resizing.addStream(mediaStream)
       resizing.start()
-      players[1].src = window.URL.createObjectURL(resizing.result)
+      players[1].srcObject = resizing.result
       
       // Cropping videos
       var cropping = new VideoStreamMerger()
@@ -70,7 +69,7 @@
         height: cropping.height+300
       })
       cropping.start()
-      players[2].src = window.URL.createObjectURL(cropping.result)
+      players[2].srcObject = cropping.result
       
       var custom = new VideoStreamMerger()
       custom.addStream(mediaStream, {
@@ -85,9 +84,10 @@
         }
       })
       custom.start()
-      players[3].src = window.URL.createObjectURL(custom.result)
+      players[3].srcObject = custom.result
 
     })
 
   </script>
+  </body>
 </html>

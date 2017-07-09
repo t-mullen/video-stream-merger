@@ -1,13 +1,18 @@
-/* globals window, AudioContext */
+/* globals window */
 
 module.exports = VideoStreamMerger
-
-window.AudioContext = window.AudioContext || window.webkitAudioContext
 
 function VideoStreamMerger (opts) {
   var self = this
   if (!(self instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
+  var AudioContext = window.AudioContext || window.webkitAudioContext
+  var audioSupport = !!(AudioContext && (self._audioCtx = new AudioContext()).createMediaStreamDestination)
+  var canvasSupport = !!document.createElement('canvas').captureStream
+  var supported = audioSupport && canvasSupport
+  if (!supported) {
+    throw new Error('Unsupported browser')
+  }
   opts = opts || {}
   self.width = opts.width || 400
   self.height = opts.height || 300
@@ -18,17 +23,10 @@ function VideoStreamMerger (opts) {
   self._canvas.setAttribute('width', self.width)
   self._canvas.setAttribute('height', self.height)
   self._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none') // Push off screen
-  document.body.appendChild(self._canvas)
   self._ctx = self._canvas.getContext('2d')
-
-  // Hidden div to contain video elements
-  self._container = document.createElement('div')
-  self._container.setAttribute('style', 'display:none')
-  document.body.appendChild(self._container)
 
   self._videos = []
 
-  self._audioCtx = new AudioContext()
   self._audioDestination = self._audioCtx.createMediaStreamDestination()
 
   self.started = false
@@ -59,8 +57,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     video = document.createElement('video')
     video.autoplay = true
     video.muted = true
-    self._container.appendChild(video)
-    video.src = window.URL.createObjectURL(mediaStream)
+    video.srcObject = mediaStream
 
     if (!opts.mute) {
       opts.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
@@ -76,14 +73,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   var self = this
 
-  var found = false
-
   for (var i = 0; i < self._videos.length; i++) {
     if (mediaStream.id === self._videos[i].id) {
-      if (!found) {
-        self._container.removeChild(self._videos[i].element)
-      }
-
       if (self._videos[i].audioSource) {
         self._videos[i].audioSource.disconnect(self._audioDestination)
         self._videos[i].audioSource = null
@@ -92,11 +83,8 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       self._videos[i] = null
       self._videos.splice(i, 1)
       i--
-      found = true // keep going, duplicates
     }
   }
-
-  if (!found) throw new Error('Provided stream was never added')
 }
 
 VideoStreamMerger.prototype.start = function () {
@@ -145,12 +133,8 @@ VideoStreamMerger.prototype.destroy = function () {
 
   self.started = false
 
-  document.body.removeChild(self._canvas)
-  document.body.removeChild(self._container)
-
   self._canvas = null
   self._ctx = null
-  self._container = null
   self._videos = []
   self._audioCtx = null
   self._audioDestination = null
