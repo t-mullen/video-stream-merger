@@ -8,7 +8,7 @@ function VideoStreamMerger (opts) {
   if (!(self instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
   var AudioContext = window.AudioContext || window.webkitAudioContext
-  var audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination)
+  var audioSupport = !!(AudioContext && (self._audioCtx = new AudioContext()).createMediaStreamDestination)
   var canvasSupport = !!document.createElement('canvas').captureStream
   var supported = audioSupport && canvasSupport
   if (!supported) {
@@ -28,7 +28,6 @@ function VideoStreamMerger (opts) {
 
   self._videos = []
 
-  self._audioCtx = new AudioContext()
   self._audioDestination = self._audioCtx.createMediaStreamDestination()
 
   self.started = false
