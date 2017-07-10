@@ -6,14 +6,16 @@ function VideoStreamMerger (opts) {
   var self = this
   if (!(self instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
+  opts = opts || {}
+
   var AudioContext = window.AudioContext || window.webkitAudioContext
-  var audioSupport = !!(AudioContext && (self._audioCtx = new AudioContext()).createMediaStreamDestination)
+  var audioSupport = !!(AudioContext && (self._audioCtx = (opts.audioContext || new AudioContext())).createMediaStreamDestination)
   var canvasSupport = !!document.createElement('canvas').captureStream
   var supported = audioSupport && canvasSupport
   if (!supported) {
     throw new Error('Unsupported browser')
   }
-  opts = opts || {}
+
   self.width = opts.width || 400
   self.height = opts.height || 300
   self.fps = opts.fps || 25
@@ -61,7 +63,11 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 
     if (!opts.mute) {
       opts.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
-      opts.audioSource.connect(self._audioDestination)
+      if (opts.audioEffect) {
+        opts.audioEffect(opts.audioSource, self._audioDestination)
+      } else {
+        opts.audioSource.connect(self._audioDestination)
+      }
     }
   }
 

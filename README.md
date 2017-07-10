@@ -80,7 +80,8 @@ Optional `opts` defaults to the below:
 {
   width: 400,   // Width of the output video
   height: 300,  // Height of the output video
-  fps: 25       // Video capture frames per second
+  fps: 25       // Video capture frames per second,
+  audioContext: null // Supply an external AudioContext (for audio effects)
 }
 ```
 
@@ -98,7 +99,8 @@ Optional `opts` defaults to the below:
   width: <width of output>,     // size to draw the stream
   height: <height of output>,
   mute: false,  // if true, any audio tracks will not be merged
-  draw: null    // A custom drawing function (see below)
+  draw: null,    // A custom drawing function (see below)
+  audioEffect: null // A custom WebAudio effect (see below)
 }
 ```
 
@@ -149,3 +151,18 @@ merger.addStream(mediaStream, {
 ```
 
 See the bottom example of the [Live Demo](https://rationalcoding.github.io/video-stream-merger/) to see this in action.  
+
+## Custom WebAudio Effects
+
+You can also take direct control over how audio streams are merged, and apply effects.
+
+```javascript
+merger.addStream(mediaStream, {
+  audioEffect: function (sourceNode, destinationNode) {
+    // sourceNode is the input streams audio (microphone, etc)
+    // destinationNode is the output streams audio
+    
+    sourceNode.connect(destinationNode) // The default effect, simply merges audio
+  })
+})
+```
