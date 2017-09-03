@@ -42,6 +42,19 @@ test('e2e', function (t) {
     x: merger.width - 100,
     y: merger.height - 100
   })
+  merger.addData('data', [1,2,3], {
+    draw: function (ctx, frame, done) {
+      ctx.beginPath();
+      ctx.rect(100, 100, 100, 100);
+      ctx.fillStyle = 'yellow';
+      ctx.fill();
+      t.deepEqual([1,2,3], frame)
+      done()
+    },
+    audioEffect: function (source, dest) {
+      t.equals(source, null)
+    }
+  })
 
   merger.start()
 
@@ -52,6 +65,7 @@ test('e2e', function (t) {
 
     window.setTimeout(function () {
       merger.removeStream(mediaStream)
+      merger.removeData('data')
       t.pass('removed')
       
       window.setTimeout(function () {

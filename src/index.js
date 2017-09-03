@@ -40,12 +40,14 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 
   opts = opts || {}
 
+  opts.isData = false
   opts.x = opts.x || 0
   opts.y = opts.y || 0
   opts.width = opts.width || self.width
   opts.height = opts.height || self.height
   opts.draw = opts.draw || null
   opts.mute = opts.mute || false
+  opts.audioEffect = opts.audioEffect || null
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var video = null
@@ -63,11 +65,14 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 
     if (!opts.mute) {
       opts.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
+      opts.audioOutput = self._audioCtx.createGain() // Intermediate gain node
+      opts.audioOutput.gain.value = 1
       if (opts.audioEffect) {
-        opts.audioEffect(opts.audioSource, self._audioDestination)
+        opts.audioEffect(opts.audioSource, opts.audioOutput)
       } else {
-        opts.audioSource.connect(self._audioDestination)
+        opts.audioSource.connect(opts.audioOutput) // Default is direct connect
       }
+      opts.audioOutput.connect(self._audioDestination)
     }
   }
 
@@ -82,8 +87,11 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   for (var i = 0; i < self._videos.length; i++) {
     if (mediaStream.id === self._videos[i].id) {
       if (self._videos[i].audioSource) {
-        self._videos[i].audioSource.disconnect(self._audioDestination)
         self._videos[i].audioSource = null
+      }
+      if (self._videos[i].audioOutput) {
+        self._videos[i].audioOutput.disconnect(self._audioDestination)
+        self._videos[i].audioOutput = null
       }
 
       self._videos[i] = null
@@ -91,6 +99,32 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       i--
     }
   }
+}
+
+VideoStreamMerger.prototype.addData = function (key, value, opts) {
+  var self = this
+
+  opts = opts || {}
+  opts.isData = true
+  opts.draw = opts.draw || null
+  opts.audioEffect = opts.audioEffect || null
+  opts.id = key
+  opts.element = value
+
+  if (opts.audioEffect) {
+    opts.audioOutput = self._audioCtx.createGain() // Intermediate gain node
+    opts.audioOutput.gain.value = 1
+    opts.audioEffect(null, opts.audioOutput)
+    opts.audioOutput.connect(self._audioDestination)
+  }
+
+  self._videos.push(opts)
+}
+
+VideoStreamMerger.prototype.removeData = function (key) {
+  var self = this
+
+  self.removeStream({id: key})
 }
 
 VideoStreamMerger.prototype.start = function () {
@@ -125,8 +159,10 @@ VideoStreamMerger.prototype._draw = function () {
   self._videos.forEach(function (video) {
     if (video.draw) { // custom frame transform
       video.draw(self._ctx, video.element, done)
-    } else {
+    } else if (!video.isData) {
       self._ctx.drawImage(video.element, video.x, video.y, video.width, video.height)
+      done()
+    } else {
       done()
     }
   })
