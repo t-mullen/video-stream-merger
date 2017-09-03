@@ -38,6 +38,10 @@ function VideoStreamMerger (opts) {
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
 
+  if (typeof mediaStream === 'string') {
+    return self._addData(mediaStream, opts)
+  }
+
   opts = opts || {}
 
   opts.isData = false
@@ -84,6 +88,12 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   var self = this
 
+  if (typeof mediaStream === 'string') {
+    mediaStream = {
+      id: mediaStream
+    }
+  }
+
   for (var i = 0; i < self._videos.length; i++) {
     if (mediaStream.id === self._videos[i].id) {
       if (self._videos[i].audioSource) {
@@ -101,7 +111,7 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   }
 }
 
-VideoStreamMerger.prototype.addData = function (key, value, opts) {
+VideoStreamMerger.prototype._addData = function (key, opts) {
   var self = this
 
   opts = opts || {}
@@ -109,7 +119,7 @@ VideoStreamMerger.prototype.addData = function (key, value, opts) {
   opts.draw = opts.draw || null
   opts.audioEffect = opts.audioEffect || null
   opts.id = key
-  opts.element = value
+  opts.element = null
 
   if (opts.audioEffect) {
     opts.audioOutput = self._audioCtx.createGain() // Intermediate gain node
@@ -119,12 +129,6 @@ VideoStreamMerger.prototype.addData = function (key, value, opts) {
   }
 
   self._videos.push(opts)
-}
-
-VideoStreamMerger.prototype.removeData = function (key) {
-  var self = this
-
-  self.removeStream({id: key})
 }
 
 VideoStreamMerger.prototype.start = function () {
