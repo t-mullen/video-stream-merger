@@ -85,9 +85,9 @@ Optional `opts` defaults to the below:
 }
 ```
 
-### `merger.addStream(mediaStream, [opts])`
+### `merger.addStream(mediaStream|id, [opts])`
 
-Add a MediaStream to be merged.
+Add a MediaStream to be merged. Use an `id` string if you only want to provide an effect.
 
 The order that streams are added matters. Streams placed earlier will be behind later streams.
 
@@ -104,9 +104,9 @@ Optional `opts` defaults to the below:
 }
 ```
 
-### `merger.removeStream(mediaStream)`
+### `merger.removeStream(mediaStream|id)`
 
-Remove a MediaStream from the merging.
+Remove a MediaStream from the merging. You may also use the ID of the stream.
 
 If you have added the same MediaStream multiple times, all instances will be removed.
 
