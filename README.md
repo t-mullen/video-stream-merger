@@ -166,3 +166,7 @@ merger.addStream(mediaStream, {
   })
 })
 ```
+
+Both the `draw` and `audioEffect` options can be used without any MediaStream at all. Just pass a string instead.
+
+
