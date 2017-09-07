@@ -38,7 +38,7 @@ function VideoStreamMerger (opts) {
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
-  
+
   if (typeof mediaStream === 'string') {
     return self._addData(mediaStream, opts)
   }
@@ -53,6 +53,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   opts.draw = opts.draw || null
   opts.mute = opts.mute || false
   opts.audioEffect = opts.audioEffect || null
+  opts.index = opts.index === null ? self._videos.length : opts.index
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var video = null
@@ -83,12 +84,12 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 
   opts.element = video
   opts.id = mediaStream.id || null
-  self._videos.push(opts)
+  self._videos.splice(opts.index, 0, opts)
 }
 
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   var self = this
-  
+
   if (typeof mediaStream === 'string') {
     mediaStream = {
       id: mediaStream

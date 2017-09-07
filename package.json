@@ -1,6 +1,6 @@
 {
   "name": "video-stream-merger",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "Create a composite from multiple MediaStreams.",
   "main": "src/index.js",
   "directories": {

@@ -89,7 +89,7 @@ Optional `opts` defaults to the below:
 
 Add a MediaStream to be merged. Use an `id` string if you only want to provide an effect.
 
-The order that streams are added matters. Streams placed earlier will be behind later streams.
+The order that streams are added matters. Streams placed earlier will be behind later streams (use the `index` option to change this behaviour.)
 
 Optional `opts` defaults to the below:
 ```
@@ -98,6 +98,7 @@ Optional `opts` defaults to the below:
   y: 0,
   width: <width of output>,     // size to draw the stream
   height: <height of output>,
+  index: null, // Order in which to draw the stream (0 pushes to bottom, null pushes to top)
   mute: false,  // if true, any audio tracks will not be merged
   draw: null,    // A custom drawing function (see below)
   audioEffect: null // A custom WebAudio effect (see below)
