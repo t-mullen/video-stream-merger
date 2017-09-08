@@ -21,6 +21,12 @@ Check out [WBS](https://github.com/RationalCoding/Web-Broadcasting-Software), wh
 npm install video-stream-merger
 ```
 
+or
+
+```html
+<script src="dist/video-stream-merger.js><script>
+```
+
 ## usage
 
 Let's first get two media streams. One from the webcam, and another a screen capture.
