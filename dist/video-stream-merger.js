@@ -31,6 +31,11 @@ function VideoStreamMerger (opts) {
   self._videos = []
 
   self._audioDestination = self._audioCtx.createMediaStreamDestination()
+  
+  // Start WebAudio immediately
+  var constantAudioNode = self._audioCtx.createConstantSource()
+  constantAudioNode.start()
+  constantAudioNode.connect(self._audioDestination)
 
   self.started = false
   self.result = null
@@ -122,6 +127,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   opts.audioEffect = opts.audioEffect || null
   opts.id = key
   opts.element = null
+  opts.index = opts.index === null ? self._videos.length : opts.index
 
   if (opts.audioEffect) {
     opts.audioOutput = self._audioCtx.createGain() // Intermediate gain node
@@ -130,7 +136,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
     opts.audioOutput.connect(self._audioDestination)
   }
 
-  self._videos.push(opts)
+  self._videos.splice(opts.index, 0, opts)
 }
 
 VideoStreamMerger.prototype.start = function () {
