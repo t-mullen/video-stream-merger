@@ -30,11 +30,6 @@ function VideoStreamMerger (opts) {
   self._videos = []
 
   self._audioDestination = self._audioCtx.createMediaStreamDestination()
-  
-  // Start WebAudio immediately
-  var constantAudioNode = self._audioCtx.createConstantSource()
-  constantAudioNode.start()
-  constantAudioNode.connect(self._audioDestination)
 
   self.started = false
   self.result = null
