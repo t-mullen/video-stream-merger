@@ -59,7 +59,7 @@
         })
 
         peer2.on('stream', function (stream) {
-          players[1].srcObject = stream
+          players[1].src = URL.createObjectURL(stream)
         })
 
         var numStreams = 0
