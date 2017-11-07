@@ -31,20 +31,23 @@ function VideoStreamMerger (opts) {
 
   self._audioDestination = self._audioCtx.createMediaStreamDestination()
 
-  // HACK for wowza #7, #10
-  if (opts.useConstantAudio) {
-    var constantAudioNode = self._audioCtx.createConstantSource()
-    constantAudioNode.start()
-
-    var gain = self._audioCtx.createGain() // gain node prevents quality drop
-    gain.gain.value = 0
-
-    constantAudioNode.connect(gain)
-    gain.connect(self._audioDestination)
-  }
+  self._setupConstantNode() // HACK for wowza #7, #10
 
   self.started = false
   self.result = null
+}
+
+VideoStreamMerger.prototype._setupConstantNode = function () {
+  var self = this
+
+  var constantAudioNode = self._audioCtx.createConstantSource()
+  constantAudioNode.start()
+
+  var gain = self._audioCtx.createGain() // gain node prevents quality drop
+  gain.gain.value = 0
+
+  constantAudioNode.connect(gain)
+  gain.connect(self._audioDestination)
 }
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
