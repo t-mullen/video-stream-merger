@@ -199,6 +199,7 @@ VideoStreamMerger.prototype.destroy = function () {
   self._canvas = null
   self._ctx = null
   self._videos = []
+  self._audioCtx.close()
   self._audioCtx = null
   self._audioDestination = null
 
