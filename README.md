@@ -117,6 +117,12 @@ Remove a MediaStream from the merging. You may also use the ID of the stream.
 
 If you have added the same MediaStream multiple times, all instances will be removed.
 
+### `merger.updateIndex(mediaStream|id, newIndex)`
+
+Update the z-index (draw order) of an already added stream or data object. Identical to the `index` option.
+
+If you have added the same MediaStream multiple times, the relative order of instances is not guaranteed.
+
 ### `merger.start()`
 
 Start the merging and create `merger.result`.
