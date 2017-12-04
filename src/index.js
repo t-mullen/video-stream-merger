@@ -50,6 +50,26 @@ VideoStreamMerger.prototype._setupConstantNode = function () {
   gain.connect(self._audioDestination)
 }
 
+VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
+  var self = this
+
+  if (typeof mediaStream === 'string') {
+    mediaStream = {
+      id: mediaStream
+    }
+  }
+
+  index = index == null ? self._streams.length : index
+
+  for (var i = 0; i < self._streams.length; i++) {
+    if (mediaStream.id === self._streams[i].id) {
+      var stream = self._streams.splice(i, 1)[0]
+      stream.index = index
+      self._streams.splice(stream.index, 0, stream)
+    }
+  }
+}
+
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
 
@@ -68,7 +88,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.draw = opts.draw || null
   stream.mute = opts.mute || false
   stream.audioEffect = opts.audioEffect || null
-  stream.index = opts.index == undefined ? self._streams.length : opts.index
+  stream.index = opts.index == null ? self._streams.length : opts.index
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var videoElement = null
@@ -139,7 +159,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   stream.audioEffect = opts.audioEffect || null
   stream.id = key
   stream.element = null
-  stream.index = opts.index === null ? self._streams.length : opts.index
+  stream.index = opts.index == null ? self._streams.length : opts.index
 
   if (stream.audioEffect) {
     stream.audioOutput = self._audioCtx.createGain() // Intermediate gain node
@@ -148,7 +168,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
     stream.audioOutput.connect(self._audioDestination)
   }
 
-  self._streams.splice(opts.index, 0, stream)
+  self._streams.splice(stream.index, 0, stream)
 }
 
 VideoStreamMerger.prototype.start = function () {

@@ -43,11 +43,10 @@ test('e2e', function (t) {
     y: merger.height - 100
   })
   merger.addStream('data', {
+    index: 0,
     draw: function (ctx, frame, done) {
-      ctx.beginPath();
-      ctx.rect(100, 100, 100, 100);
       ctx.fillStyle = 'yellow';
-      ctx.fill();
+      ctx.fillRect(0, 0, 50, 50);
       t.equal(null, frame)
       done()
     },
@@ -55,6 +54,7 @@ test('e2e', function (t) {
       t.equals(null, source)
     }
   })
+  merger.updateIndex('data', null)
 
   merger.start()
 
