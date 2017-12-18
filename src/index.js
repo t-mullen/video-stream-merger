@@ -39,7 +39,7 @@ function VideoStreamMerger (opts) {
 }
 
 VideoStreamMerger.prototype._backgroundAudioHack = function () {
-  var self = thiss
+  var self = this
 
   // stop browser from throttling timers by playing almost-silent audio
   var source = self._audioCtx.createConstantSource()
