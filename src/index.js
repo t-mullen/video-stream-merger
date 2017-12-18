@@ -43,10 +43,10 @@ VideoStreamMerger.prototype._backgroundAudioHack = function () {
 
   // stop browser from throttling timers by playing almost-silent audio
   var source = self._audioCtx.createConstantSource()
-  var gainNode = ctx.createGain()
+  var gainNode = self._audioCtx.createGain()
   gainNode.gain.value = 0.001 // required to prevent popping on start
   source.connect(gainNode)
-  gainNode.connect(ctx.destination)
+  gainNode.connect(self._audioCtx.destination)
   source.start()
 }
 
