@@ -15,7 +15,6 @@ function VideoStreamMerger (opts) {
   if (!supported) {
     throw new Error('Unsupported browser')
   }
-
   self.width = opts.width || 400
   self.height = opts.height || 300
   self.fps = opts.fps || 25
@@ -35,6 +34,20 @@ function VideoStreamMerger (opts) {
 
   self.started = false
   self.result = null
+
+  self._backgroundAudioHack()
+}
+
+VideoStreamMerger.prototype._backgroundAudioHack = function () {
+  var self = thiss
+
+  // stop browser from throttling timers by playing almost-silent audio
+  var source = self._audioCtx.createConstantSource()
+  var gainNode = ctx.createGain()
+  gainNode.gain.value = 0.001 // required to prevent popping on start
+  source.connect(gainNode)
+  gainNode.connect(ctx.destination)
+  source.start()
 }
 
 VideoStreamMerger.prototype._setupConstantNode = function () {
