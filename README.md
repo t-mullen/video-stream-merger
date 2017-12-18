@@ -1,6 +1,6 @@
 # video-stream-merger
 
-[![Standard - JavaScript Style Guide](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio API.  
 
