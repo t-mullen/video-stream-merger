@@ -151,7 +151,7 @@ The result MediaStream will appear to be constant and stable, no matter what str
 
 ## Custom Draw Function
 
-If sizing and poisitioning aren't enough, you can directly draw the video frames by passing a function to the `draw` option.
+If sizing and positioning aren't enough, you can directly draw the video frames by passing a function to the `draw` option.
 
 ```javascript
 merger.addStream(mediaStream, {
