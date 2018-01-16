@@ -38,6 +38,21 @@ function VideoStreamMerger (opts) {
   self._backgroundAudioHack()
 }
 
+VideoStreamMerger.prototype.getAudioContext = function () {
+  var self = this
+  return self._audioCtx
+}
+
+VideoStreamMerger.prototype.getAudioDestination = function () {
+  var self = this
+  return self._audioDestination
+}
+
+VideoStreamMerger.prototype.getCanvasContext = function () {
+  var self = this
+  return self._ctx
+}
+
 VideoStreamMerger.prototype._backgroundAudioHack = function () {
   var self = this
 
