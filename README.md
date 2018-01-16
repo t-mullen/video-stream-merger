@@ -141,6 +141,14 @@ Never has more than one Audio and one Video track.
 
 Clean up everything and destroy the result stream.  
 
+### `merger.getAudioContext()`
+
+Get the WebAudio AudioContext being used by the merger.
+
+### `merger.getAudioDestination()`
+
+Get the MediaStreamDestination node that is used by the merger.
+
 ## Hot-Swapping Streams
 
 This library makes it easy to change streams in a WebRTC connection without needing to renegotiate.
