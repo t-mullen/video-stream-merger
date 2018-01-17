@@ -36,6 +36,22 @@ test('e2e', function (t) {
     width: 100,
     height: 100
   })
+  
+  var videoElement = document.createElement('video')
+  videoElement.autoplay = true
+  videoElement.muted = false
+  videoElement.src = 'test/buckbunny.webm'
+  merger.addMediaElement('myVideo', videoElement, {
+    x: 100,
+    y: 0,
+    width: 100,
+    height: 100,
+    muted: true
+  })
+  window.setTimeout(() => {
+    merger.removeStream('myVideo')
+  }, 3000)
+
   merger.addStream(mediaStream, {
     width: 100,
     height: 100,

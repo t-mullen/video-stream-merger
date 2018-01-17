@@ -98,6 +98,55 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
   }
 }
 
+// convenience function for adding a media element
+VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
+  var self = this
+
+  opts.x = opts.x || 0
+  opts.y = opts.y || 0
+  opts.width = opts.width || self.width
+  opts.height = opts.height || self.height
+  opts.mute = opts.mute || opts.muted || false
+
+  opts.oldDraw = opts.draw
+  opts.oldAudioEffect = opts.audioEffect
+
+  opts.draw = function (ctx, _, done) {
+    if (opts.oldDraw) {
+      opts.oldDraw(ctx, element, done)
+    } else {
+      console.log('draw')
+      ctx.drawImage(element, opts.x, opts.y, opts.width, opts.height)
+      done()
+    }
+  }
+
+  var audioSource = self.getAudioContext().createMediaElementSource(element)
+
+  // need keep the element "muted" while having audio on the merger
+  if (!opts.mute) {
+    var gainNode = self.getAudioContext().createGain()
+    audioSource.connect(gainNode)
+    if (element.muted) {
+      element.muted = false
+      element.volume = 0.001
+      gainNode.gain.value = 1000
+    } else {
+      gainNode.gain.value = 1
+    }
+    opts.audioEffect = function (_, destination) {
+      if (opts.oldAudioEffect) {
+        opts.oldAudioEffect(gainNode, destination)
+      } else {
+        gainNode.connect(destination)
+      }
+    }
+    opts.oldAudioEffect = null
+  }
+
+  self.addStream(id, opts)
+}
+
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   var self = this
 
@@ -114,7 +163,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.width = opts.width || self.width
   stream.height = opts.height || self.height
   stream.draw = opts.draw || null
-  stream.mute = opts.mute || false
+  stream.mute = opts.mute || opts.muted || false
   stream.audioEffect = opts.audioEffect || null
   stream.index = opts.index == null ? self._streams.length : opts.index
 

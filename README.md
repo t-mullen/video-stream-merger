@@ -149,6 +149,18 @@ Get the WebAudio AudioContext being used by the merger.
 
 Get the MediaStreamDestination node that is used by the merger.
 
+### `merger.addMediaElement(id, mediaElement, opts)`
+
+A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
+
+`id` is a string used to remove of update the index of the stream later.
+
+`mediaElement` is a **playing** HTML5 Audio or Video element.
+
+`opts` are identical to the opts for `addStream`.
+
+Streams from MediaElements can be removed via `merger.removeStream(id)`.
+
 ## Hot-Swapping Streams
 
 This library makes it easy to change streams in a WebRTC connection without needing to renegotiate.
