@@ -1,0 +1,60 @@
+<html lang="en">
+  <head>
+    <title>Files Demo</title>
+  </head>
+  <body>
+    <h1>video-stream-merger demo</h1>
+    
+    <p>Merge and manipulate existing media.</p>
+
+    <p>The below demo merges two MP4 and AAC files together.</p>
+    
+    <br><br>
+
+    <video controls id="output"></video>
+    
+  <script src="./../dist/video-stream-merger.js"></script>
+  <script src="getusermedia.js"></script>
+  
+  <script>
+    var players = document.querySelectorAll('video')
+    
+    getusermedia({video:true, audio:true}, function (err, mediaStream) { 
+      if (err) throw err
+      
+        var merger = new VideoStreamMerger()
+
+        var mp4Element = document.createElement('video')
+        var aacElement = document.createElement('audio')
+
+        mp4Element.muted = true
+        aacElement.muted = true
+
+        mp4Element.src = "sample.mp4"
+        aacElement.src = "sample.aac"
+
+        mp4Element.autoplay = true
+        aacElement.autoplay = true
+
+        var count = 100
+
+        merger.addMediaElement('aac', aacElement)
+        merger.addMediaElement('mp4', mp4Element, {
+          mute: true,
+          draw: function (ctx, frame, done) {
+            count++
+            ctx.drawImage(frame, merger.width/2 - count/2, merger.height/2 - count/2, count, count)
+            done()
+          }
+        })
+
+        merger.start()
+
+        var outputElement = document.querySelector('#output')
+        outputElement.srcObject = merger.result
+        outputElement.autoplay = true
+    })
+
+  </script>
+  </body>
+</html>

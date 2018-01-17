@@ -11,7 +11,9 @@ Merge the video of multiple MediaStreams. Also merges the audio via the WebAudio
 
 [Demo](https://rationalcoding.github.io/video-stream-merger/)
 
-[P2P Demo](https://rationalcoding.github.io/video-stream-merger/p2p.html)
+[P2P Demo](https://rationalcoding.github.io/video-stream-merger/demo/p2p.html)
+
+[Demo with Existing Files](https://rationalcoding.github.io/video-stream-merger/demo/p2p.html)
 
 Check out [WBS](https://github.com/RationalCoding/Web-Broadcasting-Software), which uses this package.  
 

@@ -16,7 +16,6 @@ function VideoStreamMerger (opts) {
   if (!supported) {
     throw new Error('Unsupported browser')
   }
-
   self.width = opts.width || 400
   self.height = opts.height || 300
   self.fps = opts.fps || 25
@@ -36,6 +35,35 @@ function VideoStreamMerger (opts) {
 
   self.started = false
   self.result = null
+
+  self._backgroundAudioHack()
+}
+
+VideoStreamMerger.prototype.getAudioContext = function () {
+  var self = this
+  return self._audioCtx
+}
+
+VideoStreamMerger.prototype.getAudioDestination = function () {
+  var self = this
+  return self._audioDestination
+}
+
+VideoStreamMerger.prototype.getCanvasContext = function () {
+  var self = this
+  return self._ctx
+}
+
+VideoStreamMerger.prototype._backgroundAudioHack = function () {
+  var self = this
+
+  // stop browser from throttling timers by playing almost-silent audio
+  var source = self._audioCtx.createConstantSource()
+  var gainNode = self._audioCtx.createGain()
+  gainNode.gain.value = 0.001 // required to prevent popping on start
+  source.connect(gainNode)
+  gainNode.connect(self._audioCtx.destination)
+  source.start()
 }
 
 VideoStreamMerger.prototype._setupConstantNode = function () {
@@ -49,6 +77,80 @@ VideoStreamMerger.prototype._setupConstantNode = function () {
 
   constantAudioNode.connect(gain)
   gain.connect(self._audioDestination)
+}
+
+VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
+  var self = this
+
+  if (typeof mediaStream === 'string') {
+    mediaStream = {
+      id: mediaStream
+    }
+  }
+
+  index = index == null ? self._streams.length : index
+
+  for (var i = 0; i < self._streams.length; i++) {
+    if (mediaStream.id === self._streams[i].id) {
+      var stream = self._streams.splice(i, 1)[0]
+      stream.index = index
+      self._streams.splice(stream.index, 0, stream)
+    }
+  }
+}
+
+// convenience function for adding a media element
+VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
+  var self = this
+
+  opts = opts || {}
+
+  opts.x = opts.x || 0
+  opts.y = opts.y || 0
+  opts.width = opts.width || self.width
+  opts.height = opts.height || self.height
+  opts.mute = opts.mute || opts.muted || false
+
+  opts.oldDraw = opts.draw
+  opts.oldAudioEffect = opts.audioEffect
+
+  if (element.tagName === 'VIDEO') {
+    opts.draw = function (ctx, _, done) {
+      if (opts.oldDraw) {
+        opts.oldDraw(ctx, element, done)
+      } else {
+        ctx.drawImage(element, opts.x, opts.y, opts.width, opts.height)
+        done()
+      }
+    }
+  } else {
+    opts.draw = null
+  }
+
+  var audioSource = self.getAudioContext().createMediaElementSource(element)
+
+  if (!opts.mute) {
+    var gainNode = self.getAudioContext().createGain()
+    audioSource.connect(gainNode)
+    if (element.muted) {
+      // keep the element "muted" while having audio on the merger
+      element.muted = false
+      element.volume = 0.001
+      gainNode.gain.value = 1000
+    } else {
+      gainNode.gain.value = 1
+    }
+    opts.audioEffect = function (_, destination) {
+      if (opts.oldAudioEffect) {
+        opts.oldAudioEffect(gainNode, destination)
+      } else {
+        gainNode.connect(destination)
+      }
+    }
+    opts.oldAudioEffect = null
+  }
+
+  self.addStream(id, opts)
 }
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
@@ -67,9 +169,9 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.width = opts.width || self.width
   stream.height = opts.height || self.height
   stream.draw = opts.draw || null
-  stream.mute = opts.mute || false
+  stream.mute = opts.mute || opts.muted || false
   stream.audioEffect = opts.audioEffect || null
-  stream.index = opts.index == undefined ? self._streams.length : opts.index
+  stream.index = opts.index == null ? self._streams.length : opts.index
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var videoElement = null
@@ -140,7 +242,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   stream.audioEffect = opts.audioEffect || null
   stream.id = key
   stream.element = null
-  stream.index = opts.index === null ? self._streams.length : opts.index
+  stream.index = opts.index == null ? self._streams.length : opts.index
 
   if (stream.audioEffect) {
     stream.audioOutput = self._audioCtx.createGain() // Intermediate gain node
@@ -149,7 +251,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
     stream.audioOutput.connect(self._audioDestination)
   }
 
-  self._streams.splice(opts.index, 0, stream)
+  self._streams.splice(stream.index, 0, stream)
 }
 
 VideoStreamMerger.prototype.start = function () {
