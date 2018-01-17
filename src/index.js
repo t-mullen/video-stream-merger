@@ -126,9 +126,10 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
     opts.draw = null
   }
 
-  var audioSource = self.getAudioContext().createMediaElementSource(element)
-
   if (!opts.mute) {
+    var audioSource = self.getAudioContext().createMediaElementSource(element)
+    audioSource.connect(self.getAudioContext().destination) // play true audio
+
     var gainNode = self.getAudioContext().createGain()
     audioSource.connect(gainNode)
     if (element.muted) {
