@@ -46,7 +46,14 @@ test('e2e', function (t) {
     y: 0,
     width: 100,
     height: 100,
-    muted: true
+    muted: false
+  })
+  merger.addMediaElement('myDuplicateVideo', videoElement, {
+    x: 150,
+    y: 0,
+    width: 100,
+    height: 100,
+    muted: false
   })
   window.setTimeout(() => {
     merger.removeStream('myVideo')
