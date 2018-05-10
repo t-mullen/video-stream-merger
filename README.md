@@ -88,8 +88,9 @@ Optional `opts` defaults to the below:
 {
   width: 400,   // Width of the output video
   height: 300,  // Height of the output video
-  fps: 25       // Video capture frames per second,
-  audioContext: null // Supply an external AudioContext (for audio effects)
+  fps: 25,       // Video capture frames per second
+  clearRect: true, // Clear the canvas every frame
+  audioContext: null, // Supply an external AudioContext (for audio effects)
 }
 ```
 

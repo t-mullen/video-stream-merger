@@ -18,6 +18,7 @@ function VideoStreamMerger (opts) {
   self.width = opts.width || 400
   self.height = opts.height || 300
   self.fps = opts.fps || 25
+  self.clearRect = opts.clearRect === undefined ? true : opts.clearRect
 
   // Hidden canvas element for merging
   self._canvas = document.createElement('canvas')
@@ -283,7 +284,9 @@ VideoStreamMerger.prototype._draw = function () {
     if (awaiting <= 0) window.requestAnimationFrame(self._draw.bind(self))
   }
 
-  self._ctx.clearRect(0, 0, self.width, self.height)
+  if (self.clearRect) {
+    self._ctx.clearRect(0, 0, self.width, self.height)
+  }
   self._streams.forEach(function (video) {
     if (video.draw) { // custom frame transform
       video.draw(self._ctx, video.element, done)
