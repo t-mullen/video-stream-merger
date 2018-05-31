@@ -189,6 +189,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     videoElement.autoplay = true
     videoElement.muted = true
     videoElement.srcObject = mediaStream
+    videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0')
+    document.body.appendChild(videoElement)
 
     if (!stream.mute) {
       stream.audioSource = self._audioCtx.createMediaStreamSource(mediaStream)
