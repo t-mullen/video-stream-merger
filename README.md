@@ -26,7 +26,7 @@ npm install video-stream-merger
 or
 
 ```html
-<script src="dist/video-stream-merger.js"><script>
+<script src="dist/video-stream-merger.js"></script>
 ```
 
 ## usage
