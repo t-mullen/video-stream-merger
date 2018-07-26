@@ -88,15 +88,21 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
     }
   }
 
-  index = index == null ? self._streams.length : index
+  index = index == null ? 0 : index
 
   for (var i = 0; i < self._streams.length; i++) {
     if (mediaStream.id === self._streams[i].id) {
-      var stream = self._streams.splice(i, 1)[0]
       stream.index = index
-      self._streams.splice(stream.index, 0, stream)
     }
   }
+  self._sortStreams()
+}
+
+VideoStreamMerger.prototype._sortStreams = function () {
+  var self = this
+  self._streams = self._streams.sort((a, b) => {
+    return a.index > b.index
+  })
 }
 
 // convenience function for adding a media element
@@ -173,7 +179,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.draw = opts.draw || null
   stream.mute = opts.mute || opts.muted || false
   stream.audioEffect = opts.audioEffect || null
-  stream.index = opts.index == null ? self._streams.length : opts.index
+  stream.index = opts.index == null ? 0 : opts.index
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var videoElement = null
@@ -206,7 +212,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
 
   stream.element = videoElement
   stream.id = mediaStream.id || null
-  self._streams.splice(stream.index, 0, stream)
+  self._streams.push(stream)
+  self._sortStreams()
 }
 
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
@@ -246,7 +253,7 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   stream.audioEffect = opts.audioEffect || null
   stream.id = key
   stream.element = null
-  stream.index = opts.index == null ? self._streams.length : opts.index
+  stream.index = opts.index == null ? 0 : opts.index
 
   if (stream.audioEffect) {
     stream.audioOutput = self._audioCtx.createGain() // Intermediate gain node
@@ -255,7 +262,8 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
     stream.audioOutput.connect(self._audioDestination)
   }
 
-  self._streams.splice(stream.index, 0, stream)
+  self._streams.push(stream)
+  self._sortStreams()
 }
 
 VideoStreamMerger.prototype.start = function () {

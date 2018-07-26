@@ -38,17 +38,22 @@
       
       // Composite videos
       var composite = new VideoStreamMerger()
-      composite.addStream(mediaStream)
+      composite.addStream(mediaStream, {
+        index: 0
+      })
       composite.addStream(mediaStream, {
         width: 50,
-        height: 50
+        height: 50,
+        index: 1
       })
       composite.addStream(mediaStream, {
         x: composite.width - 50,
         y: composite.height - 50,
         width: 50,
-        height: 50
+        height: 50,
+        index: 1
       })
+      console.log(composite._streams)
       composite.start()
       players[0].srcObject = composite.result
       

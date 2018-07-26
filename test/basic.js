@@ -63,7 +63,8 @@ test('e2e', function (t) {
     width: 100,
     height: 100,
     x: merger.width - 100,
-    y: merger.height - 100
+    y: merger.height - 100,
+    index: 1
   })
   merger.addStream('data', {
     index: 0,
@@ -77,7 +78,7 @@ test('e2e', function (t) {
       t.equals(null, source)
     }
   })
-  merger.updateIndex('data', null)
+  merger.updateIndex('data', 2)
 
   merger.start()
 

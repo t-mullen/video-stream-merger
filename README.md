@@ -107,7 +107,7 @@ Optional `opts` defaults to the below:
   y: 0,
   width: <width of output>,     // size to draw the stream
   height: <height of output>,
-  index: null, // Order in which to draw the stream (0 pushes to bottom, null pushes to top)
+  index: 0, // Layer on which to draw the stream (0 is bottom, 1 is above that, and so on)
   mute: false,  // if true, any audio tracks will not be merged
   draw: null,    // A custom drawing function (see below)
   audioEffect: null // A custom WebAudio effect (see below)
@@ -124,7 +124,7 @@ If you have added the same MediaStream multiple times, all instances will be rem
 
 Update the z-index (draw order) of an already added stream or data object. Identical to the `index` option.
 
-If you have added the same MediaStream multiple times, the relative order of instances is not guaranteed.
+If you have added the same MediaStream multiple times, all instances will be updated.
 
 ### `merger.start()`
 
@@ -156,7 +156,7 @@ Get the MediaStreamDestination node that is used by the merger.
 
 A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
 
-`id` is a string used to remove of update the index of the stream later.
+`id` is a string used to remove or update the index of the stream later.
 
 `mediaElement` is a **playing** HTML5 Audio or Video element.
 
