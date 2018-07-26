@@ -92,7 +92,7 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
 
   for (var i = 0; i < self._streams.length; i++) {
     if (mediaStream.id === self._streams[i].id) {
-      stream.index = index
+      self._streams[i].index = index
     }
   }
   self._sortStreams()
