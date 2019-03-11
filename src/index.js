@@ -120,7 +120,7 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
   opts.oldDraw = opts.draw
   opts.oldAudioEffect = opts.audioEffect
 
-  if (element.tagName === 'VIDEO') {
+  if (element.tagName === 'VIDEO' || element.tagName === 'IMG') {
     opts.draw = function (ctx, _, done) {
       if (opts.oldDraw) {
         opts.oldDraw(ctx, element, done)
