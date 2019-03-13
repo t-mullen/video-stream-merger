@@ -120,6 +120,18 @@ Remove a MediaStream from the merging. You may also use the ID of the stream.
 
 If you have added the same MediaStream multiple times, all instances will be removed.
 
+### `merger.addMediaElement(id, mediaElement, opts)`
+
+A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
+
+`id` is a string used to remove or update the index of the stream later.
+
+`mediaElement` is a **playing** HTML5 Audio or Video element.
+
+`opts` are identical to the opts for `addStream`.
+
+Streams from MediaElements can be removed via `merger.removeStream(id)`.
+
 ### `merger.updateIndex(mediaStream|id, newIndex)`
 
 Update the z-index (draw order) of an already added stream or data object. Identical to the `index` option.
@@ -152,25 +164,13 @@ Get the WebAudio AudioContext being used by the merger.
 
 Get the MediaStreamDestination node that is used by the merger.
 
-### `merger.addMediaElement(id, mediaElement, opts)`
-
-A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
-
-`id` is a string used to remove or update the index of the stream later.
-
-`mediaElement` is a **playing** HTML5 Audio or Video element.
-
-`opts` are identical to the opts for `addStream`.
-
-Streams from MediaElements can be removed via `merger.removeStream(id)`.
-
 ## Hot-Swapping Streams
 
 This library makes it easy to change streams in a WebRTC connection without needing to renegotiate.
 
 The result MediaStream will appear to be constant and stable, no matter what streams you add/remove!
 
-[P2P Streaming Demo](https://rationalcoding.github.io/video-stream-merger/p2p.html)
+[P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/p2p.html)
 
 ## Custom Draw Function
 
@@ -186,7 +186,7 @@ merger.addStream(mediaStream, {
 })
 ```
 
-See the bottom example of the [Live Demo](https://rationalcoding.github.io/video-stream-merger/) to see this in action.  
+See the bottom example of the [Live Demo](https://t-mullen.github.io/video-stream-merger/) to see this in action.  
 
 ## Custom WebAudio Effects
 
