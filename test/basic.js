@@ -5,7 +5,7 @@ var getusermedia = require('getusermedia')
 var mediaStream
 
 test('get media stream', function (t) {
-  getusermedia({audio: true, video: true}, function (err, stream) {
+  getusermedia({ audio: true, video: true }, function (err, stream) {
     if (err) t.fail(err)
     mediaStream = stream
     t.end()
@@ -28,7 +28,7 @@ test('e2e', function (t) {
   merger.addStream(mediaStream, {
     draw: function (ctx, frame, done) {
       tick++
-      ctx.drawImage(frame, 0, 0, merger.width/2+tick, merger.height)
+      ctx.drawImage(frame, 0, 0, merger.width / 2 + tick, merger.height)
       done()
     }
   })
@@ -69,8 +69,8 @@ test('e2e', function (t) {
   merger.addStream('data', {
     index: 0,
     draw: function (ctx, frame, done) {
-      ctx.fillStyle = 'yellow';
-      ctx.fillRect(0, 0, 50, 50);
+      ctx.fillStyle = 'yellow'
+      ctx.fillRect(0, 0, 50, 50)
       t.equal(null, frame)
       done()
     },
@@ -91,7 +91,7 @@ test('e2e', function (t) {
       merger.removeStream(mediaStream)
       merger.removeStream('data')
       t.pass('removed')
-      
+
       window.setTimeout(function () {
         merger.addStream(mediaStream, {
           draw: function (ctx, frame, done) {
@@ -100,14 +100,13 @@ test('e2e', function (t) {
           }
         })
         t.pass('readded')
-      
+
         window.setTimeout(function () {
           merger.destroy()
           t.pass('destroyed')
           t.end()
         }, 4000)
       }, 2000)
-      
     }, 4000)
   }
   playVideo.srcObject = merger.result

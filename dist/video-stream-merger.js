@@ -267,11 +267,20 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   self._sortStreams()
 }
 
+// Wrapper around requestAnimationFrame and setTimeout to avoid background throttling
+VideoStreamMerger.prototype._requestAnimationFrame = function (callback) {
+  if (document.hidden) {
+    setTimeout(callback, 0)
+  } else {
+    requestAnimationFrame(callback)
+  }
+}
+
 VideoStreamMerger.prototype.start = function () {
   var self = this
 
   self.started = true
-  window.requestAnimationFrame(self._draw.bind(self))
+  self._requestAnimationFrame(self._draw.bind(self))
 
   // Add video
   self.result = self._canvas.captureStream(self.fps)
@@ -292,7 +301,7 @@ VideoStreamMerger.prototype._draw = function () {
   var awaiting = self._streams.length
   function done () {
     awaiting--
-    if (awaiting <= 0) window.requestAnimationFrame(self._draw.bind(self))
+    if (awaiting <= 0) self._requestAnimationFrame(self._draw.bind(self))
   }
 
   if (self.clearRect) {
