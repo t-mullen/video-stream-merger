@@ -170,7 +170,7 @@ This library makes it easy to change streams in a WebRTC connection without need
 
 The result MediaStream will appear to be constant and stable, no matter what streams you add/remove!
 
-[P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/p2p.html)
+[P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p.html)
 
 ## Custom Draw Function
 
