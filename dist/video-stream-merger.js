@@ -181,6 +181,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.mute = opts.mute || opts.muted || false
   stream.audioEffect = opts.audioEffect || null
   stream.index = opts.index == null ? 0 : opts.index
+  stream.hasVideo = mediaStream.getVideoTracks().length > 0
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
   var videoElement = null
@@ -310,7 +311,7 @@ VideoStreamMerger.prototype._draw = function () {
   self._streams.forEach(function (video) {
     if (video.draw) { // custom frame transform
       video.draw(self._ctx, video.element, done)
-    } else if (!video.isData) {
+    } else if (!video.isData && video.hasVideo) {
       self._ctx.drawImage(video.element, video.x, video.y, video.width, video.height)
       done()
     } else {
