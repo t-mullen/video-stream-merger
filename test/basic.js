@@ -55,7 +55,7 @@ test('e2e', function (t) {
     height: 100,
     muted: false
   })
-  window.setTimeout(() => {
+  window.setTimeout(function() {
     merger.removeStream('myVideo')
   }, 3000)
 
