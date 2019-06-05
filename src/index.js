@@ -100,7 +100,7 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
 
 VideoStreamMerger.prototype._sortStreams = function () {
   var self = this
-  self._streams = self._streams.sort((a, b) => {
+  self._streams = self._streams.sort(function(a, b) {
     return a.index - b.index
   })
 }

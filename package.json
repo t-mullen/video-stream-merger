@@ -16,6 +16,7 @@
   "author": "Thomas Mullen",
   "license": "MIT",
   "devDependencies": {
+    "browserify": "^16.2.3",
     "getusermedia": "^2.0.1",
     "standard": "^8.6.0",
     "tape": "^4.6.3"
