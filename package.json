@@ -2,7 +2,10 @@
   "name": "video-stream-merger",
   "version": "3.2.2",
   "description": "Create a composite from multiple MediaStreams.",
-  "main": "src/index.js",
+  "source": "src/index.js",
+  "main": "dist/video-stream-merger.js",
+  "module": "dist/video-stream-merger.mjs",
+  "files": ["/dist"],
   "types": "index.d.ts",
   "typings": "index.d.ts",
   "directories": {
@@ -11,13 +14,14 @@
   "scripts": {
     "test": "standard --fix src/* && npm run test-browser-local",
     "test-browser-local": "zuul --local -- test/*.js",
-    "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js"
+    "build": "microbundle",
+    "dev": "microbundle watch"
   },
   "author": "Thomas Mullen",
   "license": "MIT",
   "devDependencies": {
-    "browserify": "^16.2.3",
     "getusermedia": "^2.0.1",
+    "microbundle": "^0.11.0",
     "standard": "^8.6.0",
     "tape": "^4.6.3"
   }
