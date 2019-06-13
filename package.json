@@ -5,7 +5,9 @@
   "source": "src/index.js",
   "main": "dist/video-stream-merger.js",
   "module": "dist/video-stream-merger.mjs",
-  "files": ["/dist"],
+  "files": [
+    "/dist"
+  ],
   "types": "index.d.ts",
   "typings": "index.d.ts",
   "directories": {
