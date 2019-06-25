@@ -338,5 +338,3 @@ VideoStreamMerger.prototype.destroy = function () {
   })
   self.result = null
 }
-
-module.exports = VideoStreamMerger

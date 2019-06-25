@@ -4,7 +4,6 @@
   "description": "Create a composite from multiple MediaStreams.",
   "source": "src/index.js",
   "main": "dist/video-stream-merger.js",
-  "module": "dist/video-stream-merger.mjs",
   "files": [
     "/dist"
   ],
@@ -16,14 +15,17 @@
   "scripts": {
     "test": "standard --fix src/* && npm run test-browser-local",
     "test-browser-local": "zuul --local -- test/*.js",
-    "build": "microbundle",
-    "dev": "microbundle watch"
+    "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js -t [ babelify ]"
   },
   "author": "Thomas Mullen",
   "license": "MIT",
   "devDependencies": {
+    "@babel/core": "^7.4.5",
+    "@babel/preset-env": "^7.4.5",
+    "babel-preset-minify": "^0.5.0",
+    "babelify": "^10.0.0",
+    "browserify": "^16.2.3",
     "getusermedia": "^2.0.1",
-    "microbundle": "^0.11.0",
     "standard": "^8.6.0",
     "tape": "^4.6.3"
   }
