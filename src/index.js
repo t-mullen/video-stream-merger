@@ -267,13 +267,23 @@ VideoStreamMerger.prototype._addData = function (key, opts) {
   self._sortStreams()
 }
 
-// Wrapper around requestAnimationFrame and setTimeout to avoid background throttling
+// Wrapper around requestAnimationFrame and setInterval to avoid background throttling
 VideoStreamMerger.prototype._requestAnimationFrame = function (callback) {
-  if (document.hidden) {
-    setTimeout(callback, 0)
-  } else {
-    requestAnimationFrame(callback)
-  }
+  let fired = false
+  const interval = setInterval(() => {
+    if (!fired && document.hidden) {
+      fired = true
+      clearInterval(interval)
+      callback()
+    }
+  }, 1000/self.fps)
+  requestAnimationFrame(() => {
+    if (!fired) {
+      fired = true
+      clearInterval(interval)
+      callback()
+    }
+  })
 }
 
 VideoStreamMerger.prototype.start = function () {
