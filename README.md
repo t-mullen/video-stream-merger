@@ -197,7 +197,7 @@ getusermedia({video: true, audio:true}, function (err, webcamStream) {
   var clones = []
   
   shareWebCamStream.addEventListener('click', function () {
-      clones.push(webcam.clone())
+      clones.push(webcamStream.clone())
       merger.addStream(clones[clones.length-1])
   })
   removeWebCamStream.addEventListener('click', function () {
