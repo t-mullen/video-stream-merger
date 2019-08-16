@@ -34,7 +34,7 @@ or
 Let's first get two media streams. One from the webcam, and another a screen capture.
 ```javascript
 var getusermedia = require('getusermedia')
-var screenrecord = require('screen-record')
+var screenRecord = require('screen-record')
 
 getusermedia({video: true, audio:true}, function (err, webcamStream) {
   screenRecord(window, function (err, sourceId, constraints) {
@@ -164,13 +164,48 @@ Get the WebAudio AudioContext being used by the merger.
 
 Get the MediaStreamDestination node that is used by the merger.
 
-## Hot-Swapping Streams
+## Hot-Swapping Streams (P2P Streaming)
 
 This library makes it easy to change streams in a WebRTC connection without needing to renegotiate.
 
 The result MediaStream will appear to be constant and stable, no matter what streams you add/remove!
 
 [P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p.html)
+
+```javascript
+...
+getusermedia({video: true, audio:true}, function (err, webcamStream) {
+  let merger = new VideoStreamMerger()
+  merger.start()
+  players[0].srcObject = merger.result
+  players[0].play()
+  
+  var peer1 = new SimplePeer({initiator: true, stream:merger.result})
+  var peer2 = new SimplePeer()
+
+  peer1.on('signal', function (data) {
+    peer2.signal(data)
+  })
+  peer2.on('signal', function (data) {
+    peer1.signal(data)
+  })
+
+  peer2.on('stream', function (stream) {
+    players[1].srcObject = stream
+  })
+  
+  var clones = []
+  
+  shareWebCamStream.addEventListener('click', function () {
+      clones.push(webcamStream.clone())
+      merger.addStream(clones[clones.length-1])
+  })
+  removeWebCamStream.addEventListener('click', function () {
+      merger.removeStream(clones.pop())
+  })
+})
+...
+```
 
 ## Custom Draw Function
 
