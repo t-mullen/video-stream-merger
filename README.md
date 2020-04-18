@@ -33,12 +33,12 @@ or
 
 Let's first get two media streams. One from the webcam, and another a screen capture.
 ```javascript
-var getusermedia = require('getusermedia')
-var screenRecord = require('screen-record')
+const getusermedia = require('getusermedia')
+const screenRecord = require('screen-record')
 
-getusermedia({video: true, audio:true}, function (err, webcamStream) {
-  screenRecord(window, function (err, sourceId, constraints) {
-    getusermedia(constraints, function (err, screenStream) {
+getusermedia({video: true, audio:true}, (err, webcamStream) => {
+  screenRecord(window, (err, sourceId, constraints) => {
+    getusermedia(constraints, (err, screenStream) => {
       // We now have 2 streams: webcamStream, screenStream
     })
   })
@@ -173,38 +173,36 @@ The result MediaStream will appear to be constant and stable, no matter what str
 [P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p.html)
 
 ```javascript
-...
-getusermedia({video: true, audio:true}, function (err, webcamStream) {
-  let merger = new VideoStreamMerger()
+getusermedia({video: true, audio:true}, (err, webcamStream) => {
+  const merger = new VideoStreamMerger()
   merger.start()
   players[0].srcObject = merger.result
   players[0].play()
   
-  var peer1 = new SimplePeer({initiator: true, stream:merger.result})
-  var peer2 = new SimplePeer()
+  const peer1 = new SimplePeer({initiator: true, stream:merger.result})
+  const peer2 = new SimplePeer()
 
-  peer1.on('signal', function (data) {
+  peer1.on('signal', (data) => {
     peer2.signal(data)
   })
-  peer2.on('signal', function (data) {
+  peer2.on('signal', (data) => {
     peer1.signal(data)
   })
 
-  peer2.on('stream', function (stream) {
+  peer2.on('stream', (stream) => {
     players[1].srcObject = stream
   })
   
-  var clones = []
+  const clones = []
   
-  shareWebCamStream.addEventListener('click', function () {
+  shareWebCamStream.addEventListener('click', () => {
       clones.push(webcamStream.clone())
       merger.addStream(clones[clones.length-1])
   })
-  removeWebCamStream.addEventListener('click', function () {
+  removeWebCamStream.addEventListener('click', () => {
       merger.removeStream(clones.pop())
   })
 })
-...
 ```
 
 ## Custom Draw Function
@@ -213,7 +211,7 @@ If sizing and positioning aren't enough, you can directly draw the video frames 
 
 ```javascript
 merger.addStream(mediaStream, {
-  draw: function (ctx, frame, done) {
+  draw: (ctx, frame, done) => {
     // You can do whatever you want with this canvas context
     ctx.drawImage(frame, 0, 0, merger.width, merger.height)
     done()
@@ -229,7 +227,7 @@ You can also take direct control over how audio streams are merged, and apply ef
 
 ```javascript
 merger.addStream(mediaStream, {
-  audioEffect: function (sourceNode, destinationNode) {
+  audioEffect: (sourceNode, destinationNode) => {
     // sourceNode is the input streams audio (microphone, etc)
     // destinationNode is the output streams audio
     
