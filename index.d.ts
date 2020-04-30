@@ -58,6 +58,11 @@ declare class VideoStreamMerger {
   removeStream(stream: MediaStream | string): void;
 
   /**
+   * Change the size of the canvas and the output video track.
+   */
+  setOutputSize(width: number, height: number): void;
+
+  /**
    * Start the merging and create merger.result.
    * You can call this any time, but you only need to call it once.
    * You will still be able to add/remove streams and the result stream will automatically update.

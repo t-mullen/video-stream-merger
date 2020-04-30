@@ -138,6 +138,12 @@ Update the z-index (draw order) of an already added stream or data object. Ident
 
 If you have added the same MediaStream multiple times, all instances will be updated.
 
+### `merger.setOutputSize(width, height)`
+
+Change the size of the canvas and the output video track.
+
+Automatically updates `merger.width` and `merger.height`.
+
 ### `merger.start()`
 
 Start the merging and create `merger.result`.
@@ -170,7 +176,7 @@ This library makes it easy to change streams in a WebRTC connection without need
 
 The result MediaStream will appear to be constant and stable, no matter what streams you add/remove!
 
-[P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p.html)
+[P2P Streaming Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p-dynamic.html)
 
 ```javascript
 getusermedia({video: true, audio:true}, (err, webcamStream) => {

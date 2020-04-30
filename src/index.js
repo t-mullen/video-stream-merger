@@ -2,7 +2,7 @@
 
 module.exports = VideoStreamMerger
 
-function VideoStreamMerger(opts) {
+function VideoStreamMerger (opts) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
   opts = opts || {}
@@ -14,8 +14,8 @@ function VideoStreamMerger(opts) {
   if (!supported) {
     throw new Error('Unsupported browser')
   }
-  this.width = opts.width || 400
-  this.height = opts.height || 300
+  this.width = opts.width || 640
+  this.height = opts.height || 480
   this.fps = opts.fps || 25
   this.clearRect = opts.clearRect === undefined ? true : opts.clearRect
 
@@ -41,6 +41,13 @@ function VideoStreamMerger(opts) {
   this.result = null
 
   this._backgroundAudioHack()
+}
+
+VideoStreamMerger.prototype.setOutputSize = function (width, height) {
+  this.width = width
+  this.height = height
+  this._canvas.setAttribute('width', this.width)
+  this._canvas.setAttribute('height', this.height)
 }
 
 VideoStreamMerger.prototype.getAudioContext = function () {
@@ -105,8 +112,8 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
 
   opts.x = opts.x || 0
   opts.y = opts.y || 0
-  opts.width = opts.width || this.width
-  opts.height = opts.height || this.height
+  opts.width = opts.width
+  opts.height = opts.height
   opts.mute = opts.mute || opts.muted || false
 
   opts.oldDraw = opts.draw
@@ -117,7 +124,10 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
       if (opts.oldDraw) {
         opts.oldDraw(ctx, element, done)
       } else {
-        ctx.drawImage(element, opts.x, opts.y, opts.width, opts.height)
+        // default draw function
+        const width = opts.width == null ? this.width : opts.width
+        const height = opts.height == null ? this.height : opts.height
+        ctx.drawImage(element, opts.x, opts.y, width, height)
         done()
       }
     }
@@ -164,8 +174,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.isData = false
   stream.x = opts.x || 0
   stream.y = opts.y || 0
-  stream.width = opts.width || this.width
-  stream.height = opts.height || this.height
+  stream.width = opts.width
+  stream.height = opts.height
   stream.draw = opts.draw || null
   stream.mute = opts.mute || opts.muted || false
   stream.audioEffect = opts.audioEffect || null
@@ -299,7 +309,7 @@ VideoStreamMerger.prototype._draw = function () {
 
   // update video processing delay every 60 frames
   let t0 = null
-  if (this._frameCount % 60 == 0) {
+  if (this._frameCount % 60 === 0) {
     t0 = performance.now()
   }
 
@@ -307,7 +317,7 @@ VideoStreamMerger.prototype._draw = function () {
   const done = () => {
     awaiting--
     if (awaiting <= 0) {
-      if (this._frameCount % 60 == 0) {
+      if (this._frameCount % 60 === 0) {
         const t1 = performance.now()
         this._updateAudioDelay(t1 - t0)
       }
@@ -318,11 +328,14 @@ VideoStreamMerger.prototype._draw = function () {
   if (this.clearRect) {
     this._ctx.clearRect(0, 0, this.width, this.height)
   }
-  this._streams.forEach((video) => {
-    if (video.draw) { // custom frame transform
-      video.draw(this._ctx, video.element, done)
-    } else if (!video.isData && video.hasVideo) {
-      this._ctx.drawImage(video.element, video.x, video.y, video.width, video.height)
+  this._streams.forEach((stream) => {
+    if (stream.draw) { // custom frame transform
+      stream.draw(this._ctx, stream.element, done)
+    } else if (!stream.isData && stream.hasVideo) {
+      // default draw function
+      const width = stream.width == null ? this.width : stream.width
+      const height = stream.height == null ? this.height : stream.height
+      this._ctx.drawImage(stream.element, stream.x, stream.y, width, height)
       done()
     } else {
       done()
