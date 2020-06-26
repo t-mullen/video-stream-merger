@@ -57,55 +57,56 @@
       })
       composite.start()
       players[0].srcObject = composite.result
+      composite.destroy()
 
-      // Resizing videos
-      var resizing = new VideoStreamMerger({
-        height: 200,
-        width: 1000
-      })
-      resizing.addStream(mediaStream)
-      resizing.start()
-      players[1].srcObject = resizing.result
+      // // Resizing videos
+      // var resizing = new VideoStreamMerger({
+      //   height: 200,
+      //   width: 1000
+      // })
+      // resizing.addStream(mediaStream)
+      // resizing.start()
+      // players[1].srcObject = resizing.result
 
-      // Cropping videos
-      var cropping = new VideoStreamMerger()
-      cropping.addStream(mediaStream, {
-        x: -300,
-        y: -300,
-        width: cropping.width + 300,
-        height: cropping.height + 300
-      })
-      cropping.start()
-      players[2].srcObject = cropping.result
+      // // Cropping videos
+      // var cropping = new VideoStreamMerger()
+      // cropping.addStream(mediaStream, {
+      //   x: -300,
+      //   y: -300,
+      //   width: cropping.width + 300,
+      //   height: cropping.height + 300
+      // })
+      // cropping.start()
+      // players[2].srcObject = cropping.result
 
-      var audioContext = new AudioContext()
-      var custom = new VideoStreamMerger({
-        audioContext: audioContext
-      })
+      // var audioContext = new AudioContext()
+      // var custom = new VideoStreamMerger({
+      //   audioContext: audioContext
+      // })
 
-      //generate a audio sine wave
-      var sineNode = audioContext.createOscillator()
-      sineNode.frequency.value = 440
-      sineNode.start()
+      // //generate a audio sine wave
+      // var sineNode = audioContext.createOscillator()
+      // sineNode.frequency.value = 440
+      // sineNode.start()
 
-      custom.addStream(mediaStream, {
-        draw: function (ctx, frame, done) {
-          ctx.clearRect(0, 0, custom.width, custom.height)
-          ctx.translate(custom.width / 2, custom.height / 2)
-          ctx.rotate(0.1) // spin the video
-          ctx.drawImage(frame, -custom.width / 2, -custom.height / 2, custom.width, custom.height)
-          ctx.translate(-custom.width / 2, -custom.height / 2)
-          ctx.filter = 'blur(5px) grayscale(100%)' // make the video blurry and grayscale
-          done()
-        },
-        audioEffect: function (sourceNode, destinationNode) {
-          // merge the input audio and the sine wave
-          sourceNode.connect(destinationNode)
-          sineNode.connect(destinationNode)
-        }
-      })
-      custom.start()
-      players[3].srcObject = custom.result
+      // custom.addStream(mediaStream, {
+      //   draw: function (ctx, frame, done) {
+      //     ctx.clearRect(0, 0, custom.width, custom.height)
+      //     ctx.translate(custom.width / 2, custom.height / 2)
+      //     ctx.rotate(0.1) // spin the video
+      //     ctx.drawImage(frame, -custom.width / 2, -custom.height / 2, custom.width, custom.height)
+      //     ctx.translate(-custom.width / 2, -custom.height / 2)
+      //     ctx.filter = 'blur(5px) grayscale(100%)' // make the video blurry and grayscale
+      //     done()
+      //   },
+      //   audioEffect: function (sourceNode, destinationNode) {
+      //     // merge the input audio and the sine wave
+      //     sourceNode.connect(destinationNode)
+      //     sineNode.connect(destinationNode)
+      //   }
+      // })
+      // custom.start()
+      // players[3].srcObject = custom.result
 
     })
 

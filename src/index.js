@@ -353,6 +353,11 @@ VideoStreamMerger.prototype.destroy = function () {
 
   this._canvas = null
   this._ctx = null
+  this._streams.forEach(stream => {
+    if (stream.element) {
+      stream.element.remove()
+    }
+  })
   this._streams = []
   this._audioCtx.close()
   this._audioCtx = null
@@ -362,10 +367,6 @@ VideoStreamMerger.prototype.destroy = function () {
   this.result.getTracks().forEach((t) => {
     t.stop()
   })
-  this._streams.forEach(stream => {
-    if (stream.element) {
-      stream.element.remove()
-    }
-  })
+
   this.result = null
 }
