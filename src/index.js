@@ -2,7 +2,7 @@
 
 module.exports = VideoStreamMerger
 
-function VideoStreamMerger (opts) {
+function VideoStreamMerger(opts) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
   opts = opts || {}
@@ -25,6 +25,8 @@ function VideoStreamMerger (opts) {
   this._canvas.setAttribute('height', this.height)
   this._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none') // Push off screen
   this._ctx = this._canvas.getContext('2d')
+
+  this.videoElementsArray = [];
 
   this._streams = []
   this._frameCount = 0
@@ -198,6 +200,8 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;')
     document.body.appendChild(videoElement)
 
+    this.videoElementsArray.push(videoElement)
+
     if (!stream.mute) {
       stream.audioSource = this._audioCtx.createMediaStreamSource(mediaStream)
       stream.audioOutput = this._audioCtx.createGain() // Intermediate gain node
@@ -360,4 +364,6 @@ VideoStreamMerger.prototype.destroy = function () {
     t.stop()
   })
   this.result = null
+
+  this.videoElementsArray.forEach(element => element.remove())
 }
