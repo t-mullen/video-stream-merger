@@ -2,7 +2,7 @@
 
 module.exports = VideoStreamMerger
 
-function VideoStreamMerger (opts) {
+function VideoStreamMerger(opts) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
   opts = opts || {}
@@ -25,6 +25,9 @@ function VideoStreamMerger (opts) {
   this._canvas.setAttribute('height', this.height)
   this._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none') // Push off screen
   this._ctx = this._canvas.getContext('2d')
+
+  // Video element reference
+  this.videoElement = null
 
   this._streams = []
   this._frameCount = 0
@@ -183,20 +186,19 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   stream.hasVideo = mediaStream.getVideoTracks().length > 0
 
   // If it is the same MediaStream, we can reuse our video element (and ignore sound)
-  let videoElement = null
   for (let i = 0; i < this._streams.length; i++) {
     if (this._streams[i].id === mediaStream.id) {
-      videoElement = this._streams[i].element
+      this.videoElement = this._streams[i].element
     }
   }
 
-  if (!videoElement) {
-    videoElement = document.createElement('video')
-    videoElement.autoplay = true
-    videoElement.muted = true
-    videoElement.srcObject = mediaStream
-    videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;')
-    document.body.appendChild(videoElement)
+  if (!this.videoElement) {
+    this.videoElement = document.createElement('video')
+    this.videoElement.autoplay = true
+    this.videoElement.muted = true
+    this.videoElement.srcObject = mediaStream
+    this.videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;')
+    document.body.appendChild(this.videoElement)
 
     if (!stream.mute) {
       stream.audioSource = this._audioCtx.createMediaStreamSource(mediaStream)
@@ -211,7 +213,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
     }
   }
 
-  stream.element = videoElement
+  stream.element = this.videoElement
   stream.id = mediaStream.id || null
   this._streams.push(stream)
   this._sortStreams()
@@ -360,4 +362,9 @@ VideoStreamMerger.prototype.destroy = function () {
     t.stop()
   })
   this.result = null
+
+  if (this.videoElement) {
+    this.videoElement.remove();
+    this.videoElement = null;
+  }
 }
