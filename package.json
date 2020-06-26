@@ -4,6 +4,7 @@
   "description": "Create a composite from multiple MediaStreams.",
   "source": "src/index.js",
   "main": "dist/video-stream-merger.js",
+  "types": "index.d.ts",
   "files": [
     "/dist"
   ],
