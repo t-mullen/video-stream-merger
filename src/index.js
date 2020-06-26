@@ -2,7 +2,7 @@
 
 module.exports = VideoStreamMerger
 
-function VideoStreamMerger (opts) {
+function VideoStreamMerger(opts) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
   opts = opts || {}
@@ -225,15 +225,18 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   }
 
   for (let i = 0; i < this._streams.length; i++) {
-    if (mediaStream.id === this._streams[i].id) {
-      if (this._streams[i].audioSource) {
-        this._streams[i].audioSource = null
+    const stream = this._streams[i]
+    if (mediaStream.id === stream.id) {
+      if (stream.audioSource) {
+        stream.audioSource = null
       }
-      if (this._streams[i].audioOutput) {
-        this._streams[i].audioOutput.disconnect(this._videoSyncDelayNode)
-        this._streams[i].audioOutput = null
+      if (stream.audioOutput) {
+        stream.audioOutput.disconnect(this._videoSyncDelayNode)
+        stream.audioOutput = null
       }
-
+      if (stream.element) {
+        stream.element.remove()
+      }
       this._streams[i] = null
       this._streams.splice(i, 1)
       i--
@@ -358,6 +361,11 @@ VideoStreamMerger.prototype.destroy = function () {
 
   this.result.getTracks().forEach((t) => {
     t.stop()
+  })
+  this._streams.forEach(stream => {
+    if (stream.element) {
+      stream.element.remove()
+    }
   })
   this.result = null
 }
