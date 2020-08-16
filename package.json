@@ -14,7 +14,7 @@
   },
   "scripts": {
     "test": "standard --fix src/* && npm run test-browser-local",
-    "test-browser-local": "zuul --local -- test/*.js",
+    "test-browser-local": "airtap --local -- test/*.js",
     "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js -t [ babelify ]"
   },
   "author": "Thomas Mullen",
