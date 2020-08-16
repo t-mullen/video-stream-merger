@@ -1,10 +1,16 @@
 /* global document, window */
 
 function CanvasBackend(opts) {
+  if (!(this instanceof CanvasBackend)) return new CanvasBackend(opts)
+
   const canvasSupport = !!document.createElement('canvas').captureStream
   if (!canvasSupport) {
     throw new Error('video backend "Canvas" is not supported in this browser')
   }
+
+  this.width = opts.width
+  this.height = opts.height
+  this.fps = opts.fps
 
   // Hidden canvas element for merging
   this._canvas = document.createElement('canvas')
@@ -29,6 +35,8 @@ CanvasBackend.prototype.createSourceFromMediaStream = function (mediaStream) {
 }
 
 CanvasBackend.prototype.setResolution = function (width, height) {
+  this.width = width
+  this.height = height
   this._canvas.setAttribute('width', width)
   this._canvas.setAttribute('height', height)
 }
@@ -49,7 +57,7 @@ CanvasBackend.prototype.getOutputMediaStream = function () {
   const mediaStream = this._canvas.captureStream(this.fps)
 
   // Remove "dead" audio tracks
-  mediaStream.getAudioTracks()[0].forEach(deadTrack => {
+  mediaStream.getAudioTracks().forEach(deadTrack => {
     mediaStream.removeTrack(deadTrack)
   })
 

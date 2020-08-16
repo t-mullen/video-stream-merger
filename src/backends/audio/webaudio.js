@@ -1,5 +1,7 @@
 
 function WebAudioBackend (opts) {
+  if (!(this instanceof WebAudioBackend)) return new WebAudioBackend(opts)
+
   const AudioContext = window.AudioContext || window.webkitAudioContext
   const audioSupport = !!(AudioContext && (this._audioCtx = (opts.audioContext || new AudioContext())).createMediaStreamDestination)
   if (!audioSupport) {

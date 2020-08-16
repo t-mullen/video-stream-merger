@@ -5,14 +5,19 @@ const WebAudioBackend = require('./backends/audio/webaudio')
 
 module.exports = VideoStreamMerger
 
-function VideoStreamMerger (opts) {
+const defaultOpts = {
+  width: 640,
+  height: 480,
+  fps: 25,
+  clearRect: true
+}
+
+function VideoStreamMerger (opts = {}) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
 
-  opts = opts || {}
-  this.width = opts.width || 640
-  this.height = opts.height || 480
-  this.fps = opts.fps || 25
-  this.clearRect = opts.clearRect === undefined ? true : opts.clearRect
+  opts = Object.assign({}, defaultOpts, opts)
+  this.width = opts.width
+  this.height = opts.height
 
   this._videoBackend = new CanvasBackend(opts)
   this._audioBackend = new WebAudioBackend(opts)
@@ -54,15 +59,12 @@ VideoStreamMerger.prototype._zSortStreams = function () {
 }
 
 // convenience function for adding a media element
-VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
-  opts = opts || {}
-
+VideoStreamMerger.prototype.addMediaElement = function (id, element, opts = {}) {
   const stream = {}
-
   stream.x = opts.x || 0
   stream.y = opts.y || 0
-  stream.width = opts.width
-  stream.height = opts.height
+  stream.width = opts.width == null ? this.width : opts.width
+  stream.height = opts.height == null ? this.width : opts.width
   stream.mute = opts.mute || opts.muted || false
 
   const applyCustomDrawEffect = opts.draw
@@ -75,9 +77,7 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
         applyCustomDrawEffect(videoCtx, stream.videoSource, done)
       } else {
         // default draw function
-        const width = stream.width == null ? this.width : stream.width
-        const height = stream.height == null ? this.height : stream.height
-        this._videoBackend.drawVideoSource(stream.videoSource, stream.x, stream.x, width, height)
+        this._videoBackend.drawVideoSource(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
         done()
       }
     }
@@ -101,19 +101,17 @@ VideoStreamMerger.prototype.addMediaElement = function (id, element, opts) {
   this.addStream(id, stream)
 }
 
-VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
+VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
   if (typeof mediaStream === 'string') {
     return this._addData(mediaStream, opts)
   }
 
-  opts = opts || {}
   const stream = {}
-
   stream.isData = false
   stream.x = opts.x || 0
   stream.y = opts.y || 0
-  stream.width = opts.width
-  stream.height = opts.height
+  stream.width = opts.width == null ? this.width : opts.width
+  stream.height = opts.height == null ? this.height : opts.height
   stream.mute = opts.mute || opts.muted || false
   stream.index = opts.index == null ? 0 : opts.index
   stream.hasVideo = mediaStream.getVideoTracks().length > 0
@@ -126,12 +124,14 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
   for (let i = 0; i < this._streams.length; i++) {
     if (this._streams[i].id === mediaStream.id) {
       videoSource = this._streams[i].videoSource
+      videoSource.refCount++
     }
   }
 
   // initialize video video source, if none exists
   if (!videoSource) {
     videoSource = this._videoBackend.createSourceFromMediaStream(mediaStream)
+    videoSource.refCount = 1
   }
 
   // audio
@@ -154,9 +154,7 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts) {
       applyCustomDrawEffect(ctx, videoSource, done)
     } else {
       // default draw function
-      const width = stream.width == null ? this.width : stream.width
-      const height = stream.height == null ? this.height : stream.height
-      this._videoBackend.drawVideoSource(videoSource, stream.x, stream.x, width, height)
+      this._videoBackend.drawVideoSource(videoSource, stream.x, stream.y, stream.width, stream.height)
       done()
     }
   }
@@ -174,7 +172,10 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
     const stream = this._streams[i]
     if (id === stream.id) {
       if (stream.videoSource) {
-        this._videoBackend.destroyVideoSource(stream.videoSource)
+        videoSource.refCount--
+        if (videoSource.refCount === 0) {
+          this._videoBackend.destroyVideoSource(stream.videoSource)
+        }
         stream.videoSource = null
       }
 
