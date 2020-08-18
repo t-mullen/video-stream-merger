@@ -6,7 +6,8 @@
   "main": "dist/video-stream-merger.js",
   "types": "index.d.ts",
   "files": [
-    "/dist"
+    "/dist",
+    "index.d.ts"
   ],
   "typings": "index.d.ts",
   "directories": {
