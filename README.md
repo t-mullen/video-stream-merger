@@ -11,7 +11,7 @@ Merges the video of multiple MediaStreams. Also merges the audio via the WebAudi
 
 [Demo](https://t-mullen.github.io/video-stream-merger/)
 
-[P2P Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p.html)
+[P2P Demo](https://t-mullen.github.io/video-stream-merger/demo/p2p-fixed.html)
 
 [Existing Files Demo](https://t-mullen.github.io/video-stream-merger/demo/files.html)
 
