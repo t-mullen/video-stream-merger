@@ -1,11 +1,11 @@
 
-function WebAudioBackend (opts) {
-  if (!(this instanceof WebAudioBackend)) return new WebAudioBackend(opts)
+function WebAudioImpl (opts) {
+  if (!(this instanceof WebAudioImpl)) return new WebAudioImpl(opts)
 
   const AudioContext = window.AudioContext || window.webkitAudioContext
   const audioSupport = !!(AudioContext && (this._audioCtx = (opts.audioContext || new AudioContext())).createMediaStreamDestination)
   if (!audioSupport) {
-    throw new Error('audio backend "WebAudio" is not supported in this browser')
+    throw new Error('audio implementation "webaudio" is not supported in this browser')
   }
 
   this._audioDestination = this._audioCtx.createMediaStreamDestination()
@@ -19,19 +19,19 @@ function WebAudioBackend (opts) {
   this._backgroundAudioHack()
 }
 
-WebAudioBackend.prototype.destroyAudioSource = function (audioSink) {
+WebAudioImpl.prototype.destroyAudioSource = function (audioSink) {
   // nothing to do
 }
 
-WebAudioBackend.prototype.destroyAudioSink = function (audioSink) {
+WebAudioImpl.prototype.destroyAudioSink = function (audioSink) {
   audioSink.disconnect(this._videoSyncDelayNode)
 }
 
-WebAudioBackend.prototype.getAudioDestination = function () {
+WebAudioImpl.prototype.getAudioDestination = function () {
   return this._audioDestination
 }
 
-WebAudioBackend.prototype._backgroundAudioHack = function () {
+WebAudioImpl.prototype._backgroundAudioHack = function () {
   // stop browser from throttling timers by playing almost-silent audio
   const source = this._audioCtx.createConstantSource()
   const gainNode = this._audioCtx.createGain()
@@ -41,7 +41,7 @@ WebAudioBackend.prototype._backgroundAudioHack = function () {
   source.start()
 }
 
-WebAudioBackend.prototype._setupConstantNode = function () {
+WebAudioImpl.prototype._setupConstantNode = function () {
   const constantAudioNode = this._audioCtx.createConstantSource()
   constantAudioNode.start()
 
@@ -52,23 +52,21 @@ WebAudioBackend.prototype._setupConstantNode = function () {
   gain.connect(this._videoSyncDelayNode)
 }
 
-WebAudioBackend.prototype.createAudioEffect = function (audioEffectFunction) {
-  const intermediateGain = this._audioCtx.createGain() // Intermediate gain node
-  intermediateGain.gain.value = 1
-  audioEffectFunction(null, intermediateGain)
-  intermediateGain.connect(this._videoSyncDelayNode)
-  return intermediateGain
+WebAudioImpl.prototype.initAudioEffect = function (sourceNode, destinationNode, customEffectFunction) {
+  if (customEffectFunction) {
+    customEffectFunction(sourceNode, this._videoSyncDelayNode)
+    return {}
+  } else {
+    sourceNode.connect(this._videoSyncDelayNode)
+    return {}
+  }
 }
 
-WebAudioBackend.prototype.initDefaultAudioEffect = function (sourceNode, destinationNode) {
-  sourceNode.connect(destinationNode)
-}
-
-WebAudioBackend.prototype.updateAudioDelay = function (delayInMs) {
+WebAudioImpl.prototype.updateAudioDelay = function (delayInMs) {
   this._videoSyncDelayNode.delayTime.setValueAtTime(delayInMs / 1000, this._audioCtx.currentTime)
 }
 
-WebAudioBackend.prototype.createSourceFromElement = function (element) {
+WebAudioImpl.prototype.createSourceFromElement = function (element) {
   const sourceNode = element._VSMSourceNode || this._audioCtx.createMediaElementSource(element)
   sourceNode.origin = 'element'
   sourceNode.connect(this._audioCtx.destination) // continue to allow element's audio in global audio context
@@ -93,7 +91,7 @@ WebAudioBackend.prototype.createSourceFromElement = function (element) {
   return gainNode
 }
 
-WebAudioBackend.prototype.createSourceFromMediaStream = function (mediaStream) {
+WebAudioImpl.prototype.createSourceFromMediaStream = function (mediaStream) {
   const sourceNode = this._audioCtx.createMediaStreamSource(mediaStream)
 
   // tie lifetime to mediastream
@@ -102,7 +100,7 @@ WebAudioBackend.prototype.createSourceFromMediaStream = function (mediaStream) {
   return sourceNode
 }
 
-WebAudioBackend.prototype.createSink = function () {
+WebAudioImpl.prototype.createSink = function () {
   const gainNode = this._audioCtx.createGain() // Intermediate gain node
   gainNode.gain.value = 1
   gainNode.connect(this._videoSyncDelayNode)
@@ -110,19 +108,19 @@ WebAudioBackend.prototype.createSink = function () {
   return gainNode
 }
 
-WebAudioBackend.prototype.getContext = function () {
+WebAudioImpl.prototype.getContext = function () {
   return this._audioCtx
 }
 
-WebAudioBackend.prototype.getAudioTracks = function () {
+WebAudioImpl.prototype.getAudioTracks = function () {
   return this._audioDestination.stream.getAudioTracks()
 }
 
-WebAudioBackend.prototype.destroy = function () {
+WebAudioImpl.prototype.destroy = function () {
   this._audioCtx.close()
   this._audioCtx = null
   this._audioDestination = null
   this._videoSyncDelayNode = null
 }
 
-module.exports = WebAudioBackend
+module.exports = WebAudioImpl

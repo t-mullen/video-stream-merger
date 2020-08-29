@@ -1,16 +1,22 @@
 /* globals window */
 
-const CanvasBackend = require('./backends/video/canvas')
-const WebAudioBackend = require('./backends/audio/webaudio')
-
 module.exports = VideoStreamMerger
+const VideoImpl = {
+  Canvas: require('./impl/video/canvas'),
+  WebGL: require('./impl/video/webgl')
+}
+const AudioImpl = {
+  WebAudio: require('./impl/audio/webaudio')
+}
 
 const defaultOpts = {
   width: 640,
   height: 480,
-  fps: 25,
-  clearRect: true
+  fps: 30,
+  clearRect: false,
+  webgl: false
 }
+const FPS_BENCHMARK = false
 
 function VideoStreamMerger (opts = {}) {
   if (!(this instanceof VideoStreamMerger)) return new VideoStreamMerger(opts)
@@ -18,34 +24,39 @@ function VideoStreamMerger (opts = {}) {
   opts = Object.assign({}, defaultOpts, opts)
   this.width = opts.width
   this.height = opts.height
+  this.fps = opts.fps
 
-  this._videoBackend = new CanvasBackend(opts)
-  this._audioBackend = new WebAudioBackend(opts)
+  this._videoImpl = opts.webgl ? new VideoImpl.WebGL(opts) : new VideoImpl.Canvas(opts)
+  this._audioImpl = new AudioImpl.WebAudio(opts)
 
   this._streams = []
+  this._frameInterval = null
+  this._frameIntervalCallback = null
   this._frameCount = 0
+  this._frameT0 = null
+  this._drawT0 = null
+  this._throttleInterval = (1000 / (this.fps * 1.3)) // throttle at 2x FPS
+  this._awaitingDraw = 0
+  this._onFrameBound = this._onFrame.bind(this)
+  this._onDoneDrawBound = this._onDoneDraw.bind(this)
 
   this.started = false
   this.result = null
+  this.benchmarkFPS = null
 }
 
 VideoStreamMerger.prototype.setOutputSize = function (width, height) {
   this.width = width
   this.height = height
-  this._videoBackend.setResolution(this.width, this.height)
+  this._videoImpl.setResolution(this.width, this.height)
 }
 
 VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
-  if (typeof mediaStream === 'string') {
-    mediaStream = {
-      id: mediaStream
-    }
-  }
-
+  const id = typeof mediaStream === 'string' ? mediaStream : mediaStream.id
   index = index == null ? 0 : index
 
   for (let i = 0; i < this._streams.length; i++) {
-    if (mediaStream.id === this._streams[i].id) {
+    if (id === this._streams[i].id) {
       this._streams[i].index = index
     }
   }
@@ -59,108 +70,77 @@ VideoStreamMerger.prototype._zSortStreams = function () {
 }
 
 // convenience function for adding a media element
-VideoStreamMerger.prototype.addMediaElement = function (id, element, opts = {}) {
-  const stream = {}
-  stream.x = opts.x || 0
-  stream.y = opts.y || 0
-  stream.width = opts.width == null ? this.width : opts.width
-  stream.height = opts.height == null ? this.width : opts.width
-  stream.mute = opts.mute || opts.muted || false
-
-  const applyCustomDrawEffect = opts.draw
-  const initCustomAudioEffect = opts.audioEffect
-
-  if (element.tagName === 'VIDEO' || element.tagName === 'IMG') {
-    stream.videoSource = this._videoBackend.createSourceFromElement(element)
-    stream.applyDrawEffect = (videoCtx, _, done) => {
-      if (applyCustomDrawEffect) {
-        applyCustomDrawEffect(videoCtx, stream.videoSource, done)
-      } else {
-        // default draw function
-        this._videoBackend.drawVideoSource(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
-        done()
-      }
-    }
-  } else {
-    stream.applyDrawEffect = null
-  }
-
-  if (!stream.mute) {
-    const audioSource = this._audioBackend.createSourceFromElement(element)
-    const audioSink = this._audioBackend.createSink(element)
-    stream.audioSource = audioSource
-    stream.audioSink = audioSink
-
-    if (initCustomAudioEffect) {
-      initCustomAudioEffect(audioSource, audioSink)
-    } else {
-      this._audioBackend.initDefaultAudioEffect(audioSource, audioSink)
-    }
-  }
-
-  this.addStream(id, stream)
-}
-
-VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
-  if (typeof mediaStream === 'string') {
-    return this._addData(mediaStream, opts)
-  }
-
-  const stream = {}
-  stream.isData = false
-  stream.x = opts.x || 0
-  stream.y = opts.y || 0
-  stream.width = opts.width == null ? this.width : opts.width
-  stream.height = opts.height == null ? this.height : opts.height
-  stream.mute = opts.mute || opts.muted || false
-  stream.index = opts.index == null ? 0 : opts.index
-  stream.hasVideo = mediaStream.getVideoTracks().length > 0
-
-  const applyCustomDrawEffect = opts.draw
-  const initCustomAudioEffect = opts.audioEffect
-
-  // If it is the same MediaStream, we can reuse our video source
-  let videoSource = null
-  for (let i = 0; i < this._streams.length; i++) {
-    if (this._streams[i].id === mediaStream.id) {
-      videoSource = this._streams[i].videoSource
-      videoSource.refCount++
-    }
-  }
-
-  // initialize video video source, if none exists
-  if (!videoSource) {
-    videoSource = this._videoBackend.createSourceFromMediaStream(mediaStream)
-    videoSource.refCount = 1
+VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
+  const stream = {
+    x: opts.x || 0,
+    y: opts.y || 0,
+    width: opts.width == null ? this.width : opts.width,
+    height: opts.height == null ? this.height : opts.height,
+    mute: opts.mute || opts.muted || false,
+    index: opts.index == null ? 0 : opts.index,
+    audioSource: null,
+    audioSink: null,
+    audioEffect: null,
+    videoSource: null,
+    id: opts.id || null
   }
 
   // audio
   if (!stream.mute) {
-    const audioSource = this._audioBackend.createSourceFromMediaStream(mediaStream)
-    const audioSink = this._audioBackend.createSink()
-    stream.audioSource = audioSource
-    stream.audioSink = audioSink
+    const audioSource = stream.audioSource = this._audioImpl.createSourceFromElement(element)
+    const audioSink = stream.audioSink = this._audioImpl.createSink(element)
+    stream.audioEffect = this._audioImpl.initAudioEffect(audioSource, audioSink, opts.audioEffect)
+  }
 
-    if (initCustomAudioEffect) {
-      initCustomAudioEffect(audioSource, audioSink)
+  // video
+  if (element.tagName === 'VIDEO' || element.tagName === 'IMG') {
+    stream.videoSource = this._videoImpl.createSourceFromElement(element)
+    this._videoImpl.setVideoCoords(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
+    stream.applyDrawEffect = this._videoImpl.initDrawEffect(opts.draw)
+  } else {
+    stream.applyDrawEffect = null
+  }
+
+  this._streams.push(stream)
+  this._zSortStreams()
+}
+
+VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
+  const stream = {
+    x: opts.x || 0,
+    y: opts.y || 0,
+    width: opts.width == null ? this.width : opts.width,
+    height: opts.height == null ? this.height : opts.height,
+    mute: opts.mute || opts.muted || false,
+    index: opts.index == null ? 0 : opts.index,
+    audioSource: null,
+    audioSink: null,
+    audioEffect: null,
+    videoSource: null,
+    id: opts.id || mediaStream.id || null
+  }
+
+
+  // audio
+  if (!stream.mute) {
+    if (mediaStream) {
+      const audioSource = stream.audioSource = this._audioImpl.createSourceFromMediaStream(mediaStream)
+      const audioSink = stream.audioSink = this._audioImpl.createSink()
+      stream.audioEffect = this._audioImpl.initAudioEffect(audioSource, audioSink, opts.audioEffect)
     } else {
-      this._audioBackend.initDefaultAudioEffect(audioSource, audioSink)
+      stream.audioEffect = this._audioImpl.initAudioEffect(null, null, opts.audioEffect)
     }
   }
 
   // video
-  stream.applyDrawEffect = (ctx, _, done) => {
-    if (applyCustomDrawEffect) {
-      applyCustomDrawEffect(ctx, videoSource, done)
-    } else {
-      // default draw function
-      this._videoBackend.drawVideoSource(videoSource, stream.x, stream.y, stream.width, stream.height)
-      done()
-    }
+  if (mediaStream) {
+    stream.videoSource = this._videoImpl.createSourceFromMediaStream(mediaStream)
+    this._videoImpl.setVideoCoords(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
+    stream.applyDrawEffect = this._videoImpl.initDrawEffect(opts.draw) 
+  } else {
+    stream.applyDrawEffect = this._videoImpl.initDrawEffect(opts.draw)
   }
 
-  stream.videoSource = videoSource
-  stream.id = mediaStream.id || null
   this._streams.push(stream)
   this._zSortStreams()
 }
@@ -172,24 +152,16 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
     const stream = this._streams[i]
     if (id === stream.id) {
       if (stream.videoSource) {
-        videoSource.refCount--
-        if (videoSource.refCount === 0) {
-          this._videoBackend.destroyVideoSource(stream.videoSource)
-        }
+        this._videoImpl.destroyVideoSource(stream.videoSource)
         stream.videoSource = null
       }
-
       if (stream.audioSource) {
-        this._audioBackend.destroyAudioSource(stream.audioSource)
+        this._audioImpl.destroyAudioSource(stream.audioSource)
         stream.audioSource = null
       }
       if (stream.audioSink) {
-        this._audioBackend.destroyAudioSink(stream.audioSink)
+        this._audioImpl.destroyAudioSink(stream.audioSink)
         stream.audioSink = null
-      }
-
-      if (stream.element) {
-        stream.element.remove()
       }
       this._streams[i] = null
       this._streams.splice(i, 1)
@@ -198,36 +170,72 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   }
 }
 
-VideoStreamMerger.prototype._addData = function (key, opts) {
-  opts = opts || {}
-  const stream = {}
-
-  stream.isData = true
-  stream.applyDrawEffect = opts.draw || null
-  stream.id = key
-  stream.element = null
-  stream.index = opts.index == null ? 0 : opts.index
-
-  if (opts.audioEffect) {
-    stream.audioEffect = this._audioBackend.createAudioEffect(opts.audioEffect)
-  }
-
-  this._streams.push(stream)
-  this._zSortStreams()
-}
-
 VideoStreamMerger.prototype.start = function () {
   this.started = true
-  this._videoBackend.requestAnimationFrame(this._draw.bind(this))
+
+  // interval fallback
+  this._frameInterval = setInterval(() => {
+    if (this._frameIntervalCallback) {
+      const timestamp = performance.now()
+      this._frameIntervalCallback(timestamp)
+    }
+  }, 1000 / this.fps)
+
+  this._requestAnimationFrame()
+
+  // for benchmarking
+  if (FPS_BENCHMARK) {
+    setInterval(() => {
+      const timestamp = window.performance.now()
+      this.benchmarkFPS = 1000 / (timestamp - this._frameT0)
+      this._frameT0 = timestamp
+      this._draw()
+    }, 0)
+  }
 
   // Add video
-  this.result = this._videoBackend.getOutputMediaStream()
+  this.result = this._videoImpl.getOutputMediaStream()
 
   // Add audio
-  const audioTracks = this._audioBackend.getAudioTracks()
+  const audioTracks = this._audioImpl.getAudioTracks()
   audioTracks.forEach(audioTrack => {
     this.result.addTrack(audioTrack)
   })
+}
+
+VideoStreamMerger.prototype._onFrame = function (timestamp) {
+  if (!this._frameFired && (this._frameT0 === null || timestamp - this._frameT0 > this._throttleInterval)) {
+    this._frameIntervalCallback = null
+    this._frameFired = true
+    if (this._frameT0 !== null) {
+      this.benchmarkFPS = 1000 / (timestamp - this._frameT0)
+    }
+    this._frameT0 = timestamp
+    this._draw()
+  } else {
+    requestAnimationFrame(this._onFrameBound)
+  }
+}
+
+// Wrapper around requestAnimationFrame and setInterval to avoid background throttling
+VideoStreamMerger.prototype._requestAnimationFrame = function () {
+  if (FPS_BENCHMARK) return
+
+  this._frameFired = false
+  
+  this._frameIntervalCallback = this._onFrameBound
+  requestAnimationFrame(this._onFrameBound)
+}
+
+VideoStreamMerger.prototype._onDoneDraw = function () {
+  this._awaitingDraw--
+  if (this._awaitingDraw <= 0) {
+    if (this._frameCount % 60 === 0) {
+      const drawT1 = window.performance.now()
+      this._audioImpl.updateAudioDelay(drawT1 - this._drawT0)
+    }
+    this._requestAnimationFrame()
+  }
 }
 
 VideoStreamMerger.prototype._draw = function () {
@@ -236,31 +244,21 @@ VideoStreamMerger.prototype._draw = function () {
   this._frameCount++
 
   // update video processing delay every 60 frames
-  let t0 = null
   if (this._frameCount % 60 === 0) {
-    t0 = window.performance.now()
-  }
-
-  let awaiting = this._streams.length
-  const done = () => {
-    awaiting--
-    if (awaiting <= 0) {
-      if (this._frameCount % 60 === 0) {
-        const t1 = window.performance.now()
-        this._audioBackend.updateAudioDelay(t1 - t0)
-      }
-      this._videoBackend.requestAnimationFrame(this._draw.bind(this))
-    }
+    this._drawT0 = window.performance.now()
   }
 
   if (this.clearRect) {
-    this._videoBackend.clear()
+    this._videoImpl.clear()
   }
-  this._streams.forEach((stream) => {
+
+  this._awaitingDraw = this._streams.length
+  for (let i = 0; i < this._streams.length; ++i) {
+    const stream = this._streams[i]
     if (stream.applyDrawEffect) { // draw frames
-      stream.applyDrawEffect(this._videoBackend.getContext(), stream.element, done)
+      stream.applyDrawEffect(this._videoImpl.getContext(), stream.videoSource, this._onDoneDrawBound)
     }
-  })
+  }
 
   if (this._streams.length === 0) done()
 }
@@ -268,12 +266,15 @@ VideoStreamMerger.prototype._draw = function () {
 VideoStreamMerger.prototype.destroy = function () {
   this.started = false
 
-  this._videoBackend.destroy()
-  this._audioBackend.destroy()
+  clearInterval(this._frameInterval)
+  this._frameIntervalCallback = null
+
+  this._videoImpl.destroy()
+  this._audioImpl.destroy()
 
   this._streams.forEach(stream => {
-    if (stream.element) {
-      stream.element.remove()
+    if (stream.videoSource) {
+      this._videoImpl.destroyVideoSource(stream.videoSource)
     }
   })
   this._streams = []
@@ -288,7 +289,7 @@ VideoStreamMerger.prototype.destroy = function () {
 // legacy methods
 
 VideoStreamMerger.prototype.getCanvasContext = function () {
-  return this._videoBackend.getContext()
+  return this._videoImpl.getContext()
 }
 
 VideoStreamMerger.prototype.getAudioContext = function () {
@@ -296,5 +297,5 @@ VideoStreamMerger.prototype.getAudioContext = function () {
 }
 
 VideoStreamMerger.prototype.getAudioDestination = function () {
-  return this._audioBackend.getAudioDestination()
+  return this._audioImpl.getAudioDestination()
 }

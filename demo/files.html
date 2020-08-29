@@ -42,8 +42,8 @@
 
       var count = 100
 
-      merger.addMediaElement('aac', aacElement)
-      merger.addMediaElement('mp4', mp4Element, {
+      merger.addMediaElement(aacElement)
+      merger.addMediaElement(mp4Element, {
         mute: true,
         draw: function (ctx, frame, done) {
           count++

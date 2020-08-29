@@ -15,6 +15,7 @@
 
   <h3>Composite videos</h3>
   <video muted controls autoplay id="composite"></video>
+  <p id="fps"></p>
 
   <h3>Resize/Stretch</h3>
   <video muted controls autoplay id="resizing"></video>
@@ -33,13 +34,17 @@
   <script src="demo/getusermedia.js"></script>
 
   <script>
-    var players = document.querySelectorAll('video')
+    const players = document.querySelectorAll('video')
+    const webgl = false
 
-    getusermedia({ video: true, audio: true }, function (err, mediaStream) {
+    getusermedia({ video: true, audio: true }, (err, mediaStream) => {
       if (err) throw err
 
       // Composite videos
-      var composite = new VideoStreamMerger()
+      const composite = new VideoStreamMerger({
+        webgl
+      })
+
       composite.addStream(mediaStream, {
         index: 0
       })
@@ -59,37 +64,40 @@
       players[0].srcObject = composite.result
 
       // Resizing videos
-      var resizing = new VideoStreamMerger({
+      const resizing = new VideoStreamMerger({
         height: 200,
-        width: 1000
+        width: 1000,
+        webgl
       })
       resizing.addStream(mediaStream)
       resizing.start()
       players[1].srcObject = resizing.result
 
       // Cropping videos
-      var cropping = new VideoStreamMerger()
+      const cropping = new VideoStreamMerger({
+        webgl
+      })
       cropping.addStream(mediaStream, {
         x: -300,
         y: -300,
-        width: cropping.width + 300,
-        height: cropping.height + 300
+        width: cropping.width + 600,
+        height: cropping.height + 600
       })
       cropping.start()
       players[2].srcObject = cropping.result
 
-      var audioContext = new AudioContext()
-      var custom = new VideoStreamMerger({
+      const audioContext = new AudioContext()
+      const custom = new VideoStreamMerger({
         audioContext: audioContext
       })
 
       //generate a audio sine wave
-      var sineNode = audioContext.createOscillator()
+      const sineNode = audioContext.createOscillator()
       sineNode.frequency.value = 440
       sineNode.start()
 
       custom.addStream(mediaStream, {
-        draw: function (ctx, frame, done) {
+        draw: (ctx, frame, done) => {
           ctx.clearRect(0, 0, custom.width, custom.height)
           ctx.translate(custom.width / 2, custom.height / 2)
           ctx.rotate(0.1) // spin the video
@@ -98,7 +106,7 @@
           ctx.filter = 'blur(5px) grayscale(100%)' // make the video blurry and grayscale
           done()
         },
-        audioEffect: function (sourceNode, destinationNode) {
+        audioEffect: (sourceNode, destinationNode) => {
           // merge the input audio and the sine wave
           sourceNode.connect(destinationNode)
           sineNode.connect(destinationNode)
@@ -106,7 +114,6 @@
       })
       custom.start()
       players[3].srcObject = custom.result
-
     })
 
   </script>

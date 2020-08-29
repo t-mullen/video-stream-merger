@@ -96,13 +96,14 @@ Optional `opts` defaults to the below:
 
 ### `merger.addStream(mediaStream|id, [opts])`
 
-Add a MediaStream to be merged. Use an `id` string if you only want to provide an effect.
+Add a MediaStream to be merged. Use `null` if you only want to provide an effect.
 
 The order that streams are added matters. Streams placed earlier will be behind later streams (use the `index` option to change this behaviour.)
 
 Optional `opts` defaults to the below:
 ```
 {
+  id: "id" // ID, defaults to mediaStream.id
   x: 0, // position of the top-left corner
   y: 0,
   width: <width of output>,     // size to draw the stream

@@ -16,15 +16,11 @@
   "scripts": {
     "test": "standard --fix src/* && npm run test-browser-local",
     "test-browser-local": "airtap --local -- test/*.js",
-    "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js -t [ babelify ]"
+    "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js"
   },
   "author": "Thomas Mullen",
   "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
-    "babel-preset-minify": "^0.5.0",
-    "babelify": "^10.0.0",
     "browserify": "^16.2.3",
     "getusermedia": "^2.0.1",
     "standard": "^8.6.0",
