@@ -2,7 +2,6 @@
 
 <head>
   <title>Files Demo</title>
-  <link href="demo/style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -42,8 +41,8 @@
 
       var count = 100
 
-      merger.addMediaElement(aacElement)
-      merger.addMediaElement(mp4Element, {
+      merger.addMediaElement('aac', aacElement)
+      merger.addMediaElement('mp4', mp4Element, {
         mute: true,
         draw: function (ctx, frame, done) {
           count++

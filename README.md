@@ -91,19 +91,20 @@ Optional `opts` defaults to the below:
   fps: 25,       // Video capture frames per second
   clearRect: true, // Clear the canvas every frame
   audioContext: null, // Supply an external AudioContext (for audio effects)
+  webgl: false // Enable the experimental WebGL mode
 }
 ```
 
-### `merger.addStream(mediaStream|id, [opts])`
+### `merger.addStream(mediaStream, [opts])`
 
-Add a MediaStream to be merged. Use `null` if you only want to provide an effect.
+Add a MediaStream to be merged. Use `null` if you only want to provide effects.
 
 The order that streams are added matters. Streams placed earlier will be behind later streams (use the `index` option to change this behaviour.)
 
 Optional `opts` defaults to the below:
 ```
 {
-  id: "id" // ID, defaults to mediaStream.id
+  id: <unique ID> // defaults to mediaStream.id
   x: 0, // position of the top-left corner
   y: 0,
   width: <width of output>,     // size to draw the stream
@@ -123,21 +124,38 @@ If you have added the same MediaStream multiple times, all instances will be rem
 
 ### `merger.addMediaElement(id, mediaElement, opts)`
 
-A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
+Merge a HTML5 MediaElement instead of a MediaStream.
 
-`id` is a string used to remove or update the index of the stream later.
+`id` is unique string identifying this element.
 
 `mediaElement` is a **playing** HTML5 Audio or Video element.
 
-`opts` are identical to the opts for `addStream`.
+```
+{
+  x: 0, // position of the top-left corner
+  y: 0,
+  width: <width of output>,     // size to draw the stream
+  height: <height of output>,
+  index: 0, // Layer on which to draw the stream (0 is bottom, 1 is above that, and so on)
+  mute: false,  // if true, any audio tracks will not be merged
+  draw: null,    // A custom drawing function (see below)
+  audioEffect: null // A custom WebAudio effect (see below)
+}
+```
 
 Streams from MediaElements can be removed via `merger.removeStream(id)`.
 
 ### `merger.updateIndex(mediaStream|id, newIndex)`
 
-Update the z-index (draw order) of an already added stream or data object. Identical to the `index` option.
+Update the z-index (draw order) of an already added stream. Identical to the `index` option.
 
-If you have added the same MediaStream multiple times, all instances will be updated.
+If you have added the same MediaStream or `id` multiple times, all instances will be updated.
+
+### `merger.updatePosition(mediaStream|id, x, y, width, height)`
+
+Update the position and size of an already added stream.
+
+If you have added the same MediaStream or `id` multiple times, all instances will be updated.
 
 ### `merger.setOutputSize(width, height)`
 
@@ -214,7 +232,7 @@ getusermedia({video: true, audio:true}, (err, webcamStream) => {
 
 ## Custom Draw Function
 
-If sizing and positioning aren't enough, you can directly draw the video frames by passing a function to the `draw` option.
+If sizing and positioning aren't enough, you can directly draw the video frames by passing a function to the `draw` option. Draw functions are not supported when using WebGL mode.
 
 ```javascript
 merger.addStream(mediaStream, {

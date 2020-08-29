@@ -26,7 +26,8 @@ function VideoStreamMerger (opts = {}) {
   this.height = opts.height
   this.fps = opts.fps
 
-  this._videoImpl = opts.webgl ? new VideoImpl.WebGL(opts) : new VideoImpl.Canvas(opts)
+  const webglSupport = !!window.WebGLRenderingContext
+  this._videoImpl = (opts.webgl && webglSupport)? new VideoImpl.WebGL(opts) : new VideoImpl.Canvas(opts)
   this._audioImpl = new AudioImpl.WebAudio(opts)
 
   this._streams = []
@@ -63,6 +64,22 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
   this._zSortStreams()
 }
 
+VideoStreamMerger.prototype.updatePosition = function (mediaStream, x, y, width, height) {
+  const id = typeof mediaStream === 'string' ? mediaStream : mediaStream.id
+
+  for (let i = 0; i < this._streams.length; i++) {
+    if (id === this._streams[i].id) {
+      const stream = this._streams[i]
+      stream.x = x
+      stream.y = y
+      stream.width = width
+      stream.height = height
+      this._videoImpl.setVideoCoords(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
+    }
+  }
+  this._zSortStreams()
+}
+
 VideoStreamMerger.prototype._zSortStreams = function () {
   this._streams = this._streams.sort((a, b) => {
     return a.index - b.index
@@ -70,7 +87,7 @@ VideoStreamMerger.prototype._zSortStreams = function () {
 }
 
 // convenience function for adding a media element
-VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
+VideoStreamMerger.prototype.addMediaElement = function (id, element, opts = {}) {
   const stream = {
     x: opts.x || 0,
     y: opts.y || 0,
@@ -82,11 +99,11 @@ VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
     audioSink: null,
     audioEffect: null,
     videoSource: null,
-    id: opts.id || null
+    id: id || opts.id || null
   }
 
   // audio
-  if (!stream.mute) {
+  if (!stream.mute && (element.tagName === 'VIDEO' || element.tagName === 'AUDIO')) {
     const audioSource = stream.audioSource = this._audioImpl.createSourceFromElement(element)
     const audioSink = stream.audioSink = this._audioImpl.createSink(element)
     stream.audioEffect = this._audioImpl.initAudioEffect(audioSource, audioSink, opts.audioEffect)
@@ -106,6 +123,10 @@ VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
 }
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
+  if (typeof mediaStream === 'string') {
+    opts.id = mediaStream // support older ID argument API
+    mediaStream = null
+  }
   const stream = {
     x: opts.x || 0,
     y: opts.y || 0,
@@ -119,7 +140,6 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
     videoSource: null,
     id: opts.id || mediaStream.id || null
   }
-
 
   // audio
   if (!stream.mute) {
@@ -147,10 +167,12 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
 
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   const id = typeof mediaStream === 'string' ? mediaStream : mediaStream.id
+  let found = false
 
   for (let i = 0; i < this._streams.length; i++) {
     const stream = this._streams[i]
     if (id === stream.id) {
+      found = true
       if (stream.videoSource) {
         this._videoImpl.destroyVideoSource(stream.videoSource)
         stream.videoSource = null
@@ -167,6 +189,10 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       this._streams.splice(i, 1)
       i--
     }
+  }
+
+  if (!found) {
+    throw new Error('No stream with ID : ' + id)
   }
 }
 
@@ -257,10 +283,12 @@ VideoStreamMerger.prototype._draw = function () {
     const stream = this._streams[i]
     if (stream.applyDrawEffect) { // draw frames
       stream.applyDrawEffect(this._videoImpl.getContext(), stream.videoSource, this._onDoneDrawBound)
+    } else {
+      this._onDoneDrawBound()
     }
   }
 
-  if (this._streams.length === 0) done()
+  if (this._streams.length === 0) this._onDoneDrawBound()
 }
 
 VideoStreamMerger.prototype.destroy = function () {

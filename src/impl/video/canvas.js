@@ -39,7 +39,7 @@ CanvasImpl.prototype.createSourceFromMediaStream = function (mediaStream) {
   document.body.appendChild(videoElement)
   mediaStream._VSMVideoElement = videoElement
 
-  return { videoElement }
+  return { videoElement, isExternalElement: false }
 }
 
 CanvasImpl.prototype.setResolution = function (width, height) {

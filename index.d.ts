@@ -27,7 +27,7 @@ declare class VideoStreamMerger {
    * The order that streams are added matters. Streams placed earlier will be behind later streams (use the index option to change this behaviour.)
    */
   addStream(
-    stream: MediaStream | string,
+    stream: MediaStream | string | null,
     options?: Partial<VideoStreamMerger.AddStreamOptions>
   ): void;
 
@@ -46,14 +46,20 @@ declare class VideoStreamMerger {
   ): void;
 
   /**
-   * Update the z-index (draw order) of an already added stream or data object. Identical to the index option.
-   * If you have added the same MediaStream multiple times, all instances will be updated.
+   * Update the z-index (draw order) of an already added stream. Identical to the index option.
+   * If you have added the same MediaStream or ID multiple times, all instances will be updated.
    */
   updateIndex(stream: MediaStream | string, newIndex: number): void;
 
   /**
+   * Update the position of an already added stream or data object.
+   * If you have added the same MediaStream or ID multiple times, all instances will be updated.
+   */
+  updatePosition(stream: MediaStream | string, x: number, y: number, width: number, height: number): void;
+
+  /**
    * Remove a MediaStream from the merging. You may also use the ID of the stream.
-   * If you have added the same MediaStream multiple times, all instances will be removed.
+   * If you have added the same MediaStream or ID multiple times, all instances will be removed.
    */
   removeStream(stream: MediaStream | string): void;
 
@@ -107,9 +113,11 @@ declare namespace VideoStreamMerger {
     fps: number;
     clearRect: boolean;
     audioContext: AudioContext;
+    webgl: boolean;
   }
 
   export interface AddStreamOptions {
+    id: String;
     x: number;
     y: number;
     width: number;

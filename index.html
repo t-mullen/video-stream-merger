@@ -35,7 +35,7 @@
 
   <script>
     const players = document.querySelectorAll('video')
-    const webgl = false
+    const webgl = true
 
     getusermedia({ video: true, audio: true }, (err, mediaStream) => {
       if (err) throw err
@@ -49,15 +49,17 @@
         index: 0
       })
       composite.addStream(mediaStream, {
-        width: 50,
-        height: 50,
+        id: 'small1',
+        width: 100,
+        height: 100,
         index: 1
       })
       composite.addStream(mediaStream, {
-        x: composite.width - 50,
-        y: composite.height - 50,
-        width: 50,
-        height: 50,
+        id: 'small2',
+        x: composite.width - 100,
+        y: composite.height - 100,
+        width: 100,
+        height: 100,
         index: 1
       })
       composite.start()

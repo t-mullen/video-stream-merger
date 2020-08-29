@@ -1,7 +1,6 @@
 <html lang="en">
 
 <head>
-  <link href="demo/style.css" rel="stylesheet" />
 </head>
 
 <body>
@@ -39,7 +38,8 @@
       const VIDEO_HEIGHT = 300
       var merger = new VideoStreamMerger({
         width: VIDEO_WIDTH,
-        height: VIDEO_HEIGHT
+        height: VIDEO_HEIGHT,
+        webgl: true
       })
       merger.start()
 
@@ -60,28 +60,22 @@
       })
 
       var numStreams = 0
-      var curStream = 0
-      var clones = []
 
       buttons[0].addEventListener('click', function () {
-        clones.push(webcam.clone())
-        const curStream = numStreams
-        merger.addStream(clones[clones.length - 1], {
+        merger.addStream(webcam, {
+          id: numStreams.toString(),
           mute: numStreams > 0,
-          draw: function (ctx, frame, done) {
-            if (curStream >= numStreams) curStream = 0
-
-            ctx.drawImage(frame, VIDEO_WIDTH * curStream, 0, VIDEO_WIDTH, VIDEO_HEIGHT)
-
-            done()
-          }
+          x: VIDEO_WIDTH * numStreams,
+          y: 0,
+          width: VIDEO_WIDTH,
+          height: VIDEO_HEIGHT
         })
         numStreams++
         merger.setOutputSize(numStreams * VIDEO_WIDTH, VIDEO_HEIGHT)
       })
 
       buttons[1].addEventListener('click', function () {
-        merger.removeStream(clones.pop())
+        merger.removeStream(numStreams.toString())
         numStreams--
         merger.setOutputSize(numStreams * VIDEO_WIDTH, VIDEO_HEIGHT)
       })

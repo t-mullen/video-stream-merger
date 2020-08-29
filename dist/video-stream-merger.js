@@ -167,7 +167,7 @@ CanvasImpl.prototype.createSourceFromMediaStream = function (mediaStream) {
   document.body.appendChild(videoElement)
   mediaStream._VSMVideoElement = videoElement
 
-  return { videoElement }
+  return { videoElement, isExternalElement: false }
 }
 
 CanvasImpl.prototype.setResolution = function (width, height) {
@@ -270,7 +270,7 @@ function buildFragShader (maxTextureUnits) {
 }
 
 const defaultOpts = {
-  maxTextureUnits: 2,
+  maxTextureUnits: 16,
 }
 
 function WebGLImpl(opts) {
@@ -278,10 +278,6 @@ function WebGLImpl(opts) {
 
   opts = Object.assign({}, defaultOpts, opts)
 
-  const webglSupport = !!window.WebGLRenderingContext
-  if (!webglSupport) {
-    throw new Error('video implementation "webgl" is not supported in this browser')
-  }
   const captureSupport = !!document.createElement('canvas').captureStream
   if (!captureSupport) {
     throw new Error('"CanvasElement.captureStream" is not supported in this browser')
@@ -298,7 +294,6 @@ function WebGLImpl(opts) {
   this._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none') // Push off screen
   
   const gl = this._ctx = this._canvas.getContext('webgl2', {
-    desynchronized: true,
     antialias: false,
     depth: false,
     stencil: false
@@ -358,7 +353,7 @@ function WebGLImpl(opts) {
   this._textureUnitArr = []
   this._freeTextureUnits = (new Array(this._maxTextureUnits)).fill(0).map((_, i) => i)
 
-  this._cachedTextureInfo = new Map() // maps VideoElement to unique Texture, TextureUnit
+  this._cachedTextureInfo = new WeakMap() // maps VideoElement to unique Texture, TextureUnit
   this._videoSources = new Set()
 }
 
@@ -420,12 +415,16 @@ WebGLImpl.prototype.createSourceFromElement = function (videoElement) {
 WebGLImpl.prototype._createSourceFromElement = function (videoElement) {
   // reuse textures+texture units for the same element added multiple times
   const cachedTextureInfo = this._cachedTextureInfo.get(videoElement)
-  const textureUnit = cachedTextureInfo ? cachedTextureInfo.textureUnit : this._freeTextureUnits.pop()
+  const textureUnit = cachedTextureInfo ? cachedTextureInfo.textureUnit : this._freeTextureUnits.shift()
+  if (textureUnit == null) {
+    throw new Error('Exceeded maximum number of texture units : ' + this._maxTextureUnits)
+  }
   const videoSource = {
     readyToCopy: false,
     videoElement,
     textureInfo: cachedTextureInfo || this._createTextureInfo(textureUnit),
-    bufferOffset: this._createBufferEntry(textureUnit)
+    bufferOffset: this._createBufferEntry(textureUnit),
+    x: 0, y: 0, w: 0, h: 0
   }
   this._videoSources.add(videoSource)
   this._cachedTextureInfo.set(videoElement, videoSource.textureInfo)
@@ -464,7 +463,17 @@ WebGLImpl.prototype._createSourceFromElement = function (videoElement) {
 }
 
 WebGLImpl.prototype.setVideoCoords = function (videoSource, x, y, w, h) {
+  videoSource.x = x
+  videoSource.y = y
+  videoSource.w = w
+  videoSource.h = h
+
+  this._updateBuffer(videoSource)
+}
+
+WebGLImpl.prototype._updateBuffer = function ({ bufferOffset, x, y, w, h }) {
   const gl = this._ctx
+
   y = this.height - (y + h)
   const pix2Clip = (x, full) => { return 2.0 * (x / full) - 1.0 }
   const vertices = new Float32Array([
@@ -479,7 +488,7 @@ WebGLImpl.prototype.setVideoCoords = function (videoSource, x, y, w, h) {
     pix2Clip(x + w, this.width), pix2Clip(y + h, this.height),
   ])
   for (let i = 0; i < vertices.length; ++i) {
-    this._positionArr[i + videoSource.bufferOffset * 12] = vertices[i]
+    this._positionArr[i + bufferOffset * 12] = vertices[i]
   }
   gl.bindBuffer(gl.ARRAY_BUFFER, this._positionBuffer)
   // gl.bufferSubData(gl.ARRAY_BUFFER, videoSource.bufferOffset, vertices, 0, 12)
@@ -491,7 +500,6 @@ WebGLImpl.prototype._createTextureInfo = function (textureUnit) {
   const texture = gl.createTexture()
   
   gl.activeTexture(gl.TEXTURE0 + textureUnit)
-  console.log('created texture on unit', textureUnit)
   gl.bindTexture(gl.TEXTURE_2D, texture)
 
   const samplerUniform = gl.getUniformLocation(this._program, 'u_texture' + textureUnit)
@@ -563,11 +571,15 @@ WebGLImpl.prototype.createSourceFromMediaStream = function (mediaStream) {
 }
 
 WebGLImpl.prototype.setResolution = function (width, height) {
+  const gl = this._ctx
   this.width = width
   this.height = height
   this._canvas.setAttribute('width', width)
   this._canvas.setAttribute('height', height)
-  // TODO: any webgl-specific resizes?
+  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+  for (const videoSource of this._videoSources) {
+    this._updateBuffer(videoSource)
+  }
 }
 
 WebGLImpl.prototype.getContext = function () {
@@ -609,13 +621,14 @@ WebGLImpl.prototype.getOutputMediaStream = function () {
 }
 
 WebGLImpl.prototype.destroyVideoSource = function (videoSource) {
-  console.log('destroy', videoSource)
   videoSource.videoElement._VSMRefCount--
   if (videoSource.videoElement._VSMRefCount === 0) {
     if (!videoSource._VSMExternalElement) {
       videoSource.videoElement.remove()
     }
+
     this._freeTextureUnits.push(videoSource.textureInfo.textureUnit)
+    this._freeTextureUnits.sort((a, b) => a - b)
   }
 
   this._deleteBufferEntry(videoSource)
@@ -664,7 +677,8 @@ function VideoStreamMerger (opts = {}) {
   this.height = opts.height
   this.fps = opts.fps
 
-  this._videoImpl = opts.webgl ? new VideoImpl.WebGL(opts) : new VideoImpl.Canvas(opts)
+  const webglSupport = !!window.WebGLRenderingContext
+  this._videoImpl = (opts.webgl && webglSupport)? new VideoImpl.WebGL(opts) : new VideoImpl.Canvas(opts)
   this._audioImpl = new AudioImpl.WebAudio(opts)
 
   this._streams = []
@@ -701,6 +715,22 @@ VideoStreamMerger.prototype.updateIndex = function (mediaStream, index) {
   this._zSortStreams()
 }
 
+VideoStreamMerger.prototype.updatePosition = function (mediaStream, x, y, width, height) {
+  const id = typeof mediaStream === 'string' ? mediaStream : mediaStream.id
+
+  for (let i = 0; i < this._streams.length; i++) {
+    if (id === this._streams[i].id) {
+      const stream = this._streams[i]
+      stream.x = x
+      stream.y = y
+      stream.width = width
+      stream.height = height
+      this._videoImpl.setVideoCoords(stream.videoSource, stream.x, stream.y, stream.width, stream.height)
+    }
+  }
+  this._zSortStreams()
+}
+
 VideoStreamMerger.prototype._zSortStreams = function () {
   this._streams = this._streams.sort((a, b) => {
     return a.index - b.index
@@ -708,7 +738,7 @@ VideoStreamMerger.prototype._zSortStreams = function () {
 }
 
 // convenience function for adding a media element
-VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
+VideoStreamMerger.prototype.addMediaElement = function (id, element, opts = {}) {
   const stream = {
     x: opts.x || 0,
     y: opts.y || 0,
@@ -720,11 +750,11 @@ VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
     audioSink: null,
     audioEffect: null,
     videoSource: null,
-    id: opts.id || null
+    id: id || opts.id || null
   }
 
   // audio
-  if (!stream.mute) {
+  if (!stream.mute && (element.tagName === 'VIDEO' || element.tagName === 'AUDIO')) {
     const audioSource = stream.audioSource = this._audioImpl.createSourceFromElement(element)
     const audioSink = stream.audioSink = this._audioImpl.createSink(element)
     stream.audioEffect = this._audioImpl.initAudioEffect(audioSource, audioSink, opts.audioEffect)
@@ -744,6 +774,10 @@ VideoStreamMerger.prototype.addMediaElement = function (element, opts = {}) {
 }
 
 VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
+  if (typeof mediaStream === 'string') {
+    opts.id = mediaStream // support older ID argument API
+    mediaStream = null
+  }
   const stream = {
     x: opts.x || 0,
     y: opts.y || 0,
@@ -757,7 +791,6 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
     videoSource: null,
     id: opts.id || mediaStream.id || null
   }
-
 
   // audio
   if (!stream.mute) {
@@ -785,10 +818,12 @@ VideoStreamMerger.prototype.addStream = function (mediaStream, opts = {}) {
 
 VideoStreamMerger.prototype.removeStream = function (mediaStream) {
   const id = typeof mediaStream === 'string' ? mediaStream : mediaStream.id
+  let found = false
 
   for (let i = 0; i < this._streams.length; i++) {
     const stream = this._streams[i]
     if (id === stream.id) {
+      found = true
       if (stream.videoSource) {
         this._videoImpl.destroyVideoSource(stream.videoSource)
         stream.videoSource = null
@@ -805,6 +840,10 @@ VideoStreamMerger.prototype.removeStream = function (mediaStream) {
       this._streams.splice(i, 1)
       i--
     }
+  }
+
+  if (!found) {
+    throw new Error('No stream with ID : ' + id)
   }
 }
 
@@ -895,10 +934,12 @@ VideoStreamMerger.prototype._draw = function () {
     const stream = this._streams[i]
     if (stream.applyDrawEffect) { // draw frames
       stream.applyDrawEffect(this._videoImpl.getContext(), stream.videoSource, this._onDoneDrawBound)
+    } else {
+      this._onDoneDrawBound()
     }
   }
 
-  if (this._streams.length === 0) done()
+  if (this._streams.length === 0) this._onDoneDrawBound()
 }
 
 VideoStreamMerger.prototype.destroy = function () {

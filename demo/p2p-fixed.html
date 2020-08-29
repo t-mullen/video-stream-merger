@@ -1,7 +1,6 @@
 <html lang="en">
 
 <head>
-  <link href="demo/style.css" rel="stylesheet" />
   <style>
     .wrapper {
       max-height: 150px;
@@ -43,7 +42,8 @@
 
       var merger = new VideoStreamMerger({
         width: 400 * CANVAS_MULTIPLIER,
-        height: 300 * CANVAS_MULTIPLIER
+        height: 300 * CANVAS_MULTIPLIER,
+        webgl: true
       })
       merger.start()
 
@@ -64,31 +64,28 @@
       })
 
       var numStreams = 0
-      var curStream = 0
-      var clones = []
 
       buttons[0].addEventListener('click', function () {
-        clones.push(webcam.clone())
-        merger.addStream(clones[clones.length - 1], {
-          mute: numStreams > 0,
-          draw: function (ctx, frame, done) {
-            if (curStream >= numStreams) curStream = 0
-
-            var unit = merger.width / numStreams
-            ctx.drawImage(frame, unit * curStream, 0, unit, merger.height / numStreams)
-
-            curStream++
-            done()
-          }
+        merger.addStream(webcam, {
+          id: numStreams.toString(),
+          mute: numStreams > 0
         })
         numStreams++
+        const unit = merger.width / numStreams
+        for (let i = 0; i < numStreams; ++i) {
+            merger.updatePosition(i.toString(), unit * i, 0, unit, merger.height / numStreams)
+        }
         players[0].style.width = 200 * numStreams + 'px'
         players[1].style.width = 200 * numStreams + 'px'
       })
 
       buttons[1].addEventListener('click', function () {
-        merger.removeStream(clones.pop())
         numStreams--
+        merger.removeStream(numStreams.toString())
+        const unit = merger.width / numStreams
+        for (let i = 0; i < numStreams; ++i) {
+            merger.updatePosition(i.toString(), unit * i, 0, unit, merger.height / numStreams)
+        }
         players[0].style.width = 200 * numStreams + 'px'
         players[1].style.width = 200 * numStreams + 'px'
       })

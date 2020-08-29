@@ -66,7 +66,8 @@ test('e2e', function (t) {
     y: merger.height - 100,
     index: 1
   })
-  merger.addStream('data', {
+  merger.addStream(null, {
+    id: 'data',
     index: 0,
     draw: function (ctx, frame, done) {
       ctx.fillStyle = 'yellow'
