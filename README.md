@@ -86,10 +86,10 @@ Optional `opts` defaults to the below:
 
 ```
 {
-  width: 400,   // Width of the output video
-  height: 300,  // Height of the output video
-  fps: 25,       // Video capture frames per second
-  clearRect: true, // Clear the canvas every frame
+  width: 640,   // Width of the output video
+  height: 480,  // Height of the output video
+  fps: 30,       // Video capture frames per second
+  clearRect: false, // Clear the canvas every frame
   audioContext: null, // Supply an external AudioContext (for audio effects)
   webgl: false // Enable the experimental WebGL mode
 }
