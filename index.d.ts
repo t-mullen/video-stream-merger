@@ -17,6 +17,16 @@ declare class VideoStreamMerger {
   constructor(options?: Partial<VideoStreamMerger.ConstructorOptions>);
 
   /**
+   * Height of the merged MediaStream
+   */
+  height: number;
+
+  /**
+   * Width of the merged MediaStream
+   */
+  width: number;
+
+  /**
    * The resulting merged MediaStream. Only available after calling merger.start()
    * Never has more than one Audio and one Video track.
    */
