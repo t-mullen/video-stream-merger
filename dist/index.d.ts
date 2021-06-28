@@ -1,6 +1,8 @@
 declare global {
     interface Window {
+        AudioContext: AudioContext;
         webkitAudioContext: any;
+        VideoStreamMerger: VideoStreamMerger;
     }
     interface AudioContext {
         createGainNode: any;
@@ -18,7 +20,7 @@ export declare class VideoStreamMerger {
     fps: number;
     private _streams;
     private _frameCount;
-    clearRect?: (x: number, y: number, width: number, height: number) => {};
+    clearRect?: (x: number, y: number, width: number, height: number) => void;
     started: boolean;
     result: MediaStream | null;
     supported: boolean | null;

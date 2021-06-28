@@ -14,7 +14,8 @@ module.exports = {
         filename: '[name].js',
         path: path.resolve(process.cwd(), 'dist'),
         library: 'video-stream-merger',
-        libraryTarget: 'umd'
+        libraryTarget: 'umd',
+        globalObject: 'this'
     },
     //devtool: 'inline-source-map',
     devtool: false,

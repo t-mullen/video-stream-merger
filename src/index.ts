@@ -1,5 +1,6 @@
 declare global {
   interface Window {
+    AudioContext: AudioContext;
     webkitAudioContext: any;
     VideoStreamMerger: VideoStreamMerger;
   }
@@ -35,8 +36,8 @@ export class VideoStreamMerger {
 
   constructor(opts?: any) {
 
-    const AudioContext = AudioContext || window.webkitAudioContext;
-    const audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination);
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioSupport = !!(window.AudioContext && (new AudioContext()).createMediaStreamDestination);
     const canvasSupport = !!document.createElement('canvas').captureStream;
     const supported = this.supported =  audioSupport && canvasSupport;
 
