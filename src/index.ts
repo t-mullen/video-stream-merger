@@ -1,6 +1,7 @@
 declare global {
   interface Window {
     webkitAudioContext: any;
+    VideoStreamMerger: VideoStreamMerger;
   }
   interface AudioContext {
     createGainNode: any;
@@ -15,13 +16,13 @@ declare global {
 
 export class VideoStreamMerger {
 
-  public width: number = 720;
-  public height: number = 405;
-  public fps: number = 25;
+  public width = 720;
+  public height = 405;
+  public fps = 25;
   private _streams: any[] = [];
-  private _frameCount: number = 0;
+  private _frameCount = 0;
 
-  public clearRect?: (x: number, y: number, width: number, height: number) => {};
+  public clearRect?: (x: number, y: number, width: number, height: number) => void;
   public started = false;
   public result: MediaStream | null = null;
   public supported: boolean | null = null;
@@ -34,7 +35,7 @@ export class VideoStreamMerger {
 
   constructor(opts?: any) {
 
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const AudioContext = AudioContext || window.webkitAudioContext;
     const audioSupport = !!(AudioContext && (new AudioContext()).createMediaStreamDestination);
     const canvasSupport = !!document.createElement('canvas').captureStream;
     const supported = this.supported =  audioSupport && canvasSupport;
@@ -186,7 +187,7 @@ export class VideoStreamMerger {
       element instanceof HTMLVideoElement ||
       element instanceof HTMLImageElement
     ) {
-      opts.draw = (ctx: CanvasRenderingContext2D, _: any, done: () => {}) => {
+      opts.draw = (ctx: CanvasRenderingContext2D, _: any, done: () => void) => {
         if (opts.oldDraw) {
           opts.oldDraw(ctx, element, done);
         } else {
@@ -387,7 +388,7 @@ export class VideoStreamMerger {
     this._frameCount++;
 
     // update video processing delay every 60 frames
-    let t0 : number = 0;
+    let t0  = 0;
     if (this._frameCount % 60 === 0) {
       t0 = performance.now();
     }
