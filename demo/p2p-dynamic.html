@@ -23,7 +23,7 @@
   <button>Add Stream</button>
   <button>Remove Stream</button>
   <script src="./../dist/video-stream-merger.js"></script>
-  <script src="getusermedia.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/7.0.0/simplepeer.min.js"></script>
   <script>
     var CANVAS_MULTIPLIER = 3
@@ -31,9 +31,7 @@
     var players = document.querySelectorAll('video')
     var buttons = document.querySelectorAll('button')
 
-    getusermedia({ audio: true, video: true }, function (err, webcam) {
-      if (err) throw err
-
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (webcam) {
 
       const VIDEO_WIDTH = 400
       const VIDEO_HEIGHT = 300
