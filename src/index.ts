@@ -13,6 +13,9 @@ declare global {
   interface HTMLMediaElement {
     _mediaElementSource: any
   }
+  interface HTMLVideoElement {
+    playsInline: boolean;
+  }
 }
 
 export class VideoStreamMerger {
@@ -46,14 +49,6 @@ export class VideoStreamMerger {
     }
 
     this.setOptions(opts);
-
-    // Hidden canvas element for merging
-    const canvas = this._canvas = document.createElement('canvas');
-    canvas.setAttribute('width', this.width.toString());
-    canvas.setAttribute('height', this.height.toString());
-    canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none'); // Push off screen
-    this._ctx = canvas.getContext('2d');
-
 
     const audioCtx = this._audioCtx = new AudioContext();
     const audioDestination = this._audioDestination = audioCtx?.createMediaStreamDestination();
@@ -257,7 +252,7 @@ export class VideoStreamMerger {
     stream.hasVideo = mediaStream.getVideoTracks().length > 0;
 
     // If it is the same MediaStream, we can reuse our video element (and ignore sound)
-    let videoElement = null;
+    let videoElement : HTMLVideoElement | null = null;
     for (let i = 0; i < this._streams.length; i++) {
       if (this._streams[i].id === mediaStream.id) {
         videoElement = this._streams[i].element;
@@ -268,9 +263,13 @@ export class VideoStreamMerger {
       videoElement = document.createElement('video');
       videoElement.autoplay = true;
       videoElement.muted = true;
+      videoElement.playsInline = true;
       videoElement.srcObject = mediaStream;
       videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;');
       document.body.appendChild(videoElement);
+
+      var res = videoElement.play();
+      res.catch(() => {});
 
       if (this._audioCtx && !stream.mute) {
         stream.audioSource = this._audioCtx.createMediaStreamSource(mediaStream);
@@ -341,7 +340,7 @@ export class VideoStreamMerger {
   }
 
   // Wrapper around requestAnimationFrame and setInterval to avoid background throttling
-  _requestAnimationFrame(callback: any) {
+  _requestAnimationFrame(callback: () => void) {
     let fired = false;
     const interval = setInterval(() => {
       if (!fired && document.hidden) {
@@ -360,6 +359,14 @@ export class VideoStreamMerger {
   }
 
   start() {
+
+    // Hidden canvas element for merging
+    const canvas = this._canvas = document.createElement('canvas');
+    this._canvas.setAttribute('width', this.width.toString());
+    this._canvas.setAttribute('height', this.height.toString());
+    this._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none'); // Push off screen
+    this._ctx = this._canvas.getContext('2d');
+
     this.started = true;
     this._requestAnimationFrame(this._draw.bind(this));
 
@@ -427,18 +434,31 @@ export class VideoStreamMerger {
 
   _drawVideo(element: HTMLVideoElement, stream: any) {
 
-      // default draw function
-      const canvasSize = { height: this.height, width: this.width};
 
-      const position = {
-        x: stream.x || 0,
-        y: stream.y || 0
-      };
+    // default draw function
+    const canvasSize = { height: this.height, width: this.width};
 
-      const size = {
-          height: stream.height || element.videoHeight || canvasSize.height,
-          width: stream.width || element.videoWidth || canvasSize.width
-      };
+    const position = {
+      x: stream.x || 0,
+      y: stream.y || 0
+    };
+
+    const size = {
+        height: stream.height || element.videoHeight || canvasSize.height,
+        width: stream.width || element.videoWidth || canvasSize.width
+    };
+
+    // TODO move to sreeam option to enable new behavior
+    const keepRatio = false;
+
+    if (!keepRatio) {
+
+      try {
+          this._ctx?.drawImage(element, position.x, position.y, size.width, size.height);
+      } catch {
+        // Ignore error
+      }
+    } else {
 
       const sizeRatio = {
         width: canvasSize.width / size.width,
@@ -450,10 +470,11 @@ export class VideoStreamMerger {
       position.x = ( canvasSize.width - size.width * ratio ) / 2;
       position.y = ( canvasSize.height - size.height * ratio ) / 2;
 
-    try {
-      this._ctx?.drawImage(element, 0, 0, size.width, size.height, position.x, position.y, size.width*ratio, size.height*ratio);
-    } catch {
-      // Ignore error
+      try {
+        this._ctx?.drawImage(element, 0, 0, size.width, size.height, position.x, position.y, size.width*ratio, size.height*ratio);
+      } catch {
+        // Ignore error
+      }
     }
   }
 
