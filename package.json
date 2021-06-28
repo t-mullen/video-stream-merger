@@ -1,34 +1,39 @@
 {
   "name": "video-stream-merger",
-  "version": "3.6.3",
+  "version": "4.0.0",
   "description": "Create a composite from multiple MediaStreams.",
-  "source": "src/index.js",
+  "author": "Thomas Mullen",
+  "license": "MIT",
+  "source": "src/index.ts",
   "main": "dist/video-stream-merger.js",
-  "types": "index.d.ts",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
   "files": [
     "/dist",
     "/src",
-    "index.d.ts"
+    "README.md"
   ],
-  "typings": "index.d.ts",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "standard --fix src/* && npm run test-browser-local",
-    "test-browser-local": "zuul --local -- test/*.js",
-    "build": "browserify src/index.js -s VideoStreamMerger -o dist/video-stream-merger.js -t [ babelify ]"
+    "lint-fix": "eslint . --ext .ts --fix",
+    "lint": "eslint . --ext .ts",
+    "build": "webpack --mode=development --watch",
+    "release": "webpack --mode=production",
+    "start": "http-server -c-1 demo"
   },
-  "author": "Thomas Mullen",
-  "license": "MIT",
   "devDependencies": {
-    "@babel/core": "^7.4.5",
-    "@babel/preset-env": "^7.4.5",
-    "babel-preset-minify": "^0.5.0",
-    "babelify": "^10.0.0",
-    "browserify": "^16.2.3",
-    "getusermedia": "^2.0.1",
-    "standard": "^8.6.0",
-    "tape": "^4.6.3"
+    "@typescript-eslint/eslint-plugin": "^4.2.0",
+    "@typescript-eslint/parser": "^4.2.0",
+    "awesome-typescript-loader": "^5.2.1",
+    "eslint": "^7.29.0",
+    "http-server": "^0.12.3",
+    "typescript": "^3.9.7",
+    "webpack": "^5.41.0",
+    "webpack-cli": "^3.3.10"
+  },
+  "dependencies": {
+    "clean-webpack-plugin": "^4.0.0-alpha.0"
   }
 }
