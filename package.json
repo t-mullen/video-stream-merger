@@ -21,7 +21,7 @@
     "lint": "eslint . --ext .ts",
     "build": "webpack --mode=development --watch",
     "release": "webpack --mode=production",
-    "start": "http-server -c-1 demo"
+    "start": "http-server -c-1 ."
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^4.2.0",
