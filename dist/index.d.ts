@@ -13,6 +13,9 @@ declare global {
     interface HTMLMediaElement {
         _mediaElementSource: any;
     }
+    interface HTMLVideoElement {
+        playsInline: boolean;
+    }
 }
 export declare class VideoStreamMerger {
     width: number;
@@ -48,7 +51,7 @@ export declare class VideoStreamMerger {
         id: string;
     }): void;
     _addData(key: string, opts: any): void;
-    _requestAnimationFrame(callback: any): void;
+    _requestAnimationFrame(callback: () => void): void;
     start(): void;
     _updateAudioDelay(delayInMs: number): void;
     _draw(): void;
