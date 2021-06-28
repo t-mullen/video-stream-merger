@@ -13,7 +13,7 @@ declare global {
   }
 }
 
-export class MediaStreamMergerService {
+export class VideoStreamMerger {
 
   public width: number = 720;
   public height: number = 405;
@@ -478,3 +478,8 @@ export class MediaStreamMergerService {
     this.result = null;
   }
 }
+
+if (typeof window !== "undefined") {
+    (window as any).VideoStreamMerger = VideoStreamMerger;
+}
+
