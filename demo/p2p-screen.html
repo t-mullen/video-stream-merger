@@ -1,7 +1,7 @@
 <html lang="en">
 
 <head>
-  <title>P2P Fixed Demo</title>
+  <title>P2P Screen Demo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes, viewport-fit=cover">
   <link href="./style.css" rel="stylesheet" />
   <style>
@@ -13,9 +13,9 @@
 </head>
 
 <body>
-  <h1>P2P Fixed Demo</h1>
+  <h1>P2P Screen Demo</h1>
 
-  <p>Webcam stream is cloned to make several streams, which are merged together and sent over a single WebRTC
+  <p>Dsiplay stream is cloned to make several streams, which are merged together and sent over a single WebRTC
     MediaTrack.</p>
   <p>No renegotiation ever occurs. The total horizontal resolution of all streams never changes.</p>
   <p>Resolution can be improved at the cost of higher latency.</p>
@@ -52,7 +52,7 @@
     var players = document.querySelectorAll('video')
     var buttons = document.querySelectorAll('button')
 
-    navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (webcam) {
+    navigator.mediaDevices.getDisplayMedia({ audio: true, video: true }).then(function (webcam) {
 
       var merger = new VideoStreamMerger({
         width: 400 * CANVAS_MULTIPLIER,
