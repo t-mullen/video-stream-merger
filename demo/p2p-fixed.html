@@ -1,6 +1,8 @@
 <html lang="en">
 
 <head>
+  <title>P2P Fixed Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes, viewport-fit=cover">
   <link href="demo/style.css" rel="stylesheet" />
   <style>
     .wrapper {
@@ -20,11 +22,23 @@
 
   <h3>Sending Peer</h3>
   <div class="wrapper">
-    <video muted autoplay id="one" style="display:inline-block; width: 200px; background:black;"></video>
+    <video id="one"
+        muted controls
+        autoplay="autoplay"
+        playsinline="playsinline"
+        webkit-playsinline
+        style="display:inline-block; width: 200px; background:black;"
+      ></video>
   </div>
   <h3>Receiving Peer</h3>
   <div class="wrapper">
-    <video autoplay id="two" style="display:inline-block; width: 200px; background:black;"></video>
+    <video id="two"
+        controls
+        autoplay="autoplay"
+        playsinline="playsinline"
+        webkit-playsinline
+        style="display:inline-block; width: 200px; background:black;"
+      ></video>
   </div>
   <br>
   <button>Add Stream</button>

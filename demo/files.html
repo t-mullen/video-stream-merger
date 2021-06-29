@@ -2,6 +2,7 @@
 
 <head>
   <title>Files Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes, viewport-fit=cover">
   <link href="demo/style.css" rel="stylesheet" />
 </head>
 
@@ -16,7 +17,13 @@
 
   <button>Click to Start</button>
   <br>
-  <video controls id="output"></video>
+  <video id="output"
+        muted
+        controls
+        autoplay="autoplay"
+        playsinline="playsinline"
+        webkit-playsinline
+        style="display:inline-block; height: 100px; background:black;"></video>
 
   <script src="./../dist/video-stream-merger.js"></script>
 
@@ -27,6 +34,9 @@
 
       var mp4Element = document.createElement('video')
       var aacElement = document.createElement('audio')
+
+      mp4Element.playsinline = true;
+      aacElement.playsinline = true;
 
       mp4Element.muted = true
       aacElement.muted = true
