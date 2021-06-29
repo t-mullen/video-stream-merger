@@ -250,6 +250,7 @@ export class VideoStreamMerger {
     stream.audioEffect = opts.audioEffect || null;
     stream.index = opts.index == null ? 0 : opts.index;
     stream.hasVideo = mediaStream.getVideoTracks().length > 0;
+    stream.hasAudio = mediaStream.getAudioTracks().length > 0;
 
     // If it is the same MediaStream, we can reuse our video element (and ignore sound)
     let videoElement : HTMLVideoElement | null = null;
@@ -271,7 +272,7 @@ export class VideoStreamMerger {
       var res = videoElement.play();
       res.catch(() => {});
 
-      if (this._audioCtx && !stream.mute) {
+      if (stream.hasAudio && this._audioCtx && !stream.mute) {
         stream.audioSource = this._audioCtx.createMediaStreamSource(mediaStream);
         stream.audioOutput = this._audioCtx.createGain(); // Intermediate gain node
         stream.audioOutput.gain.value = 1;
