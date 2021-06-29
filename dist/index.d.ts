@@ -41,6 +41,14 @@ export interface AddStreamOptions {
     draw: DrawFunction;
     audioEffect: AudioEffect;
 }
+/**
+ * Merges the video of multiple MediaStreams. Also merges the audio via the WebAudio API.
+ *
+ * - Send multiple videos over a single WebRTC MediaConnection
+ * - Hotswap streams without worrying about renegotation or delays
+ * - Crop, scale, and rotate live video
+ * - Add crazy effects through the canvas API
+ */
 export declare class VideoStreamMerger {
     /**
      * Width of the merged MediaStream
@@ -128,4 +136,5 @@ export declare class VideoStreamMerger {
      * Clean up everything and destroy the result stream.
      */
     stop(): void;
+    destroy(): void;
 }

@@ -586,6 +586,10 @@ export class VideoStreamMerger {
 
     this.result = null;
   }
+
+  destroy() {
+    this.stop();
+  }
 }
 
 if (typeof window !== "undefined") {
