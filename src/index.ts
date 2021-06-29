@@ -18,16 +18,63 @@ declare global {
   }
 }
 
+export interface DrawFunction {
+  (
+    context: CanvasRenderingContext2D,
+    frame: CanvasImageSource,
+    done: () => void
+  ): void;
+}
+
+export interface AudioEffect {
+  (
+    sourceNode: AudioNode,
+    destinationNode: MediaStreamAudioDestinationNode
+  ): void;
+}
+
+export interface ConstructorOptions {
+  width: number;
+  height: number;
+  fps: number;
+  clearRect: boolean;
+  audioContext: AudioContext;
+}
+
+export interface AddStreamOptions {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  index: number;
+  mute: boolean;
+  muted: boolean;
+  draw: DrawFunction;
+  audioEffect: AudioEffect;
+}
+
 export class VideoStreamMerger {
 
+  /**
+   * Width of the merged MediaStream
+   */
   public width = 720;
+
+  /**
+   * Height of the merged MediaStream
+   */
   public height = 405;
   public fps = 25;
   private _streams: any[] = [];
   private _frameCount = 0;
 
-  public clearRect?: (x: number, y: number, width: number, height: number) => void;
+  public clearRect = true;
   public started = false;
+
+  /**
+   * The resulting merged MediaStream. Only available after calling merger.start()
+   * Never has more than one Audio and one Video track.
+   */
   public result: MediaStream | null = null;
   public supported: boolean | null = null;
 
@@ -37,7 +84,7 @@ export class VideoStreamMerger {
   private _audioDestination: MediaStreamAudioDestinationNode | null = null;
   private _audioCtx: AudioContext | null = null;
 
-  constructor(opts?: any) {
+  constructor(options?: ConstructorOptions | undefined) {
 
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioSupport = !!(window.AudioContext && (new AudioContext()).createMediaStreamDestination);
@@ -48,7 +95,7 @@ export class VideoStreamMerger {
       return;
     }
 
-    this.setOptions(opts);
+    this.setOptions(options);
 
     const audioCtx = this._audioCtx = new AudioContext();
     const audioDestination = this._audioDestination = audioCtx?.createMediaStreamDestination();
@@ -65,16 +112,19 @@ export class VideoStreamMerger {
     this._backgroundAudioHack();
   }
 
-  setOptions(opts?: any) {
-    opts = opts || {};
-    this._audioCtx = (opts.audioContext || new AudioContext());
-    this.width = opts.width || this.width;
-    this.height = opts.height || this.width;
-    this.fps = opts.fps || this.fps;
-    this.clearRect = opts.clearRect === undefined ? true : opts.clearRect;
+  setOptions(options?: ConstructorOptions | undefined): void {
+    options = options || {} as ConstructorOptions;
+    this._audioCtx = (options.audioContext || new AudioContext());
+    this.width = options.width || this.width;
+    this.height = options.height || this.width;
+    this.fps = options.fps || this.fps;
+    this.clearRect = options.clearRect === undefined ? true : options.clearRect;
   }
 
-  setOutputSize(width:number, height: number) {
+  /**
+   * Change the size of the canvas and the output video track.
+   */
+  setOutputSize(width:number, height: number): void {
     this.width = width;
     this.height = height;
 
@@ -84,19 +134,25 @@ export class VideoStreamMerger {
     }
   }
 
-  getAudioContext() {
+  /**
+   * Get the WebAudio AudioContext being used by the merger.
+   */
+  getAudioContext(): AudioContext | null {
     return this._audioCtx;
   }
 
-  getAudioDestination() {
+  /**
+   * Get the MediaStreamDestination node that is used by the merger.
+   */
+  getAudioDestination(): MediaStreamAudioDestinationNode | null {
     return this._audioDestination;
   }
 
-  getCanvasContext() {
+  getCanvasContext(): CanvasRenderingContext2D | null {
     return this._ctx;
   }
 
-  _backgroundAudioHack() {
+  private _backgroundAudioHack() {
     if (this._audioCtx) {
       // stop browser from throttling timers by playing almost-silent audio
       const source = this._createConstantSource();
@@ -110,7 +166,7 @@ export class VideoStreamMerger {
     }
   }
 
-  _setupConstantNode() {
+  private _setupConstantNode() {
     if (this._audioCtx && this._videoSyncDelayNode) {
       const constantAudioNode = this._createConstantSource();
 
@@ -126,7 +182,7 @@ export class VideoStreamMerger {
     }
   }
 
-  _createConstantSource() {
+  private _createConstantSource() {
 
     if (this._audioCtx) {
       if (this._audioCtx.createConstantSource) {
@@ -145,7 +201,11 @@ export class VideoStreamMerger {
     }
   }
 
-  updateIndex(mediaStream: MediaStream | string | {id: string}, index: number) {
+  /**
+   * Update the z-index (draw order) of an already added stream or data object. Identical to the index option.
+   * If you have added the same MediaStream multiple times, all instances will be updated.
+   */
+  updateIndex(mediaStream: MediaStream | string | {id: string}, index: number): void {
     if (typeof mediaStream === 'string') {
       mediaStream = {
         id: mediaStream
@@ -162,12 +222,19 @@ export class VideoStreamMerger {
     this._sortStreams();
   }
 
-  _sortStreams() {
+  private _sortStreams() {
     this._streams = this._streams.sort((a, b) => a.index - b.index);
   }
 
-  // convenience function for adding a media element
-  addMediaElement(id: string, element: HTMLMediaElement, opts: any) {
+  /**
+   * A convenience function to merge a HTML5 MediaElement instead of a MediaStream.
+   *
+   * id is a string used to remove or update the index of the stream later.
+   * mediaElement is a playing HTML5 Audio or Video element.
+   * options are identical to the opts for addStream.
+   * Streams from MediaElements can be removed via merger.removeStream(id).
+   */
+  addMediaElement(id: string, element: HTMLMediaElement, opts: any): void {
     opts = opts || {};
 
     opts.x = opts.x || 0;
@@ -231,13 +298,17 @@ export class VideoStreamMerger {
     this.addStream(id, opts);
   }
 
-  addStream(mediaStream: MediaStream | string, opts?: any) {
+  /**
+   * Add a MediaStream to be merged. Use an id string if you only want to provide an effect.
+   * The order that streams are added matters. Streams placed earlier will be behind later streams (use the index option to change this behaviour.)
+   */
+  addStream(mediaStream: MediaStream | string, opts: AddStreamOptions | undefined): void {
 
     if (typeof mediaStream === 'string') {
       return this._addData(mediaStream, opts);
     }
 
-    opts = opts || {};
+    opts = opts || {} as AddStreamOptions;
     const stream: any = {};
 
     stream.isData = false;
@@ -269,8 +340,8 @@ export class VideoStreamMerger {
       videoElement.setAttribute('style', 'position:fixed; left: 0px; top:0px; pointer-events: none; opacity:0;');
       document.body.appendChild(videoElement);
 
-      var res = videoElement.play();
-      res.catch(() => {});
+      const res = videoElement.play();
+      res.catch(null);
 
       if (stream.hasAudio && this._audioCtx && !stream.mute) {
         stream.audioSource = this._audioCtx.createMediaStreamSource(mediaStream);
@@ -291,7 +362,11 @@ export class VideoStreamMerger {
     this._sortStreams();
   }
 
-  removeStream(mediaStream: MediaStream | string | {id: string}) {
+  /**
+   * Remove a MediaStream from the merging. You may also use the ID of the stream.
+   * If you have added the same MediaStream multiple times, all instances will be removed.
+   */
+  removeStream(mediaStream: MediaStream | string | {id: string}): void {
     if (typeof mediaStream === 'string') {
       mediaStream = {
         id: mediaStream
@@ -318,7 +393,7 @@ export class VideoStreamMerger {
     }
   }
 
-  _addData(key: string, opts: any) {
+  private _addData(key: string, opts: any) {
     opts = opts || {};
     const stream: any = {};
 
@@ -341,7 +416,7 @@ export class VideoStreamMerger {
   }
 
   // Wrapper around requestAnimationFrame and setInterval to avoid background throttling
-  _requestAnimationFrame(callback: () => void) {
+  private _requestAnimationFrame(callback: () => void) {
     let fired = false;
     const interval = setInterval(() => {
       if (!fired && document.hidden) {
@@ -359,10 +434,15 @@ export class VideoStreamMerger {
     });
   }
 
-  start() {
+  /**
+   * Start the merging and create merger.result.
+   * You can call this any time, but you only need to call it once.
+   * You will still be able to add/remove streams and the result stream will automatically update.
+   */
+  start(): void {
 
     // Hidden canvas element for merging
-    const canvas = this._canvas = document.createElement('canvas');
+    this._canvas = document.createElement('canvas');
     this._canvas.setAttribute('width', this.width.toString());
     this._canvas.setAttribute('height', this.height.toString());
     this._canvas.setAttribute('style', 'position:fixed; left: 110%; pointer-events: none'); // Push off screen
@@ -385,13 +465,13 @@ export class VideoStreamMerger {
     }
   }
 
-  _updateAudioDelay(delayInMs: number) {
+  private _updateAudioDelay(delayInMs: number) {
     if (this._videoSyncDelayNode && this._audioCtx) {
       this._videoSyncDelayNode.delayTime.setValueAtTime(delayInMs / 1000, this._audioCtx.currentTime);
     }
   }
 
-  _draw() {
+  private _draw() {
     if (!this.started) {return;}
 
     this._frameCount++;
@@ -433,7 +513,7 @@ export class VideoStreamMerger {
     }
   }
 
-  _drawVideo(element: HTMLVideoElement, stream: any) {
+  private _drawVideo(element: HTMLVideoElement, stream: any) {
 
     // default draw function
 
@@ -473,7 +553,10 @@ export class VideoStreamMerger {
     }
   }
 
-  stop() {
+  /**
+   * Clean up everything and destroy the result stream.
+   */
+  stop(): void {
     this.started = false;
 
     this._canvas = null;
