@@ -528,36 +528,17 @@ export class VideoStreamMerger {
     const canvasHeight = this.height;
     const canvasWidth = this.width;
 
-    const height = stream.height || element.videoHeight || canvasHeight;
-    const width = stream.width || element.videoWidth || canvasWidth;
+    const height = stream.height || canvasHeight;
+    const width = stream.width || canvasWidth;
 
     let positionX = stream.x || 0;
     let positionY = stream.Y || 0;
 
-    // TODO move to sreeam option to enable new behavior
-    const keepRatio = false;
-
-    if (!keepRatio) {
-
-      try {
-          this._ctx?.drawImage(element, positionX, positionY, width, height);
-      } catch (err) {
-        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
-        console.error(err);
-      }
-    } else {
-
-      const ratio  = Math.min ( canvasHeight / height, canvasWidth / width);
-
-      positionX = ( canvasWidth - width * ratio ) / 2;
-      positionY = ( canvasHeight - height * ratio ) / 2;
-
-      try {
-        this._ctx?.drawImage(element, 0, 0, width, height, positionX, positionY, width*ratio, height*ratio);
-      } catch (err) {
-        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
-        console.error(err);
-      }
+    try {
+        this._ctx?.drawImage(element, positionX, positionY, width, height);
+    } catch (err) {
+      // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
+      console.error(err);
     }
   }
 
