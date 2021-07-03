@@ -2,10 +2,17 @@
 
 <head>
   <title>Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes, viewport-fit=cover">
   <link href="demo/style.css" rel="stylesheet" />
 </head>
 
 <body>
+
+  <a href="./demo/p2p-fixed.html">P2P Fixed Demo</a>
+  <a href="./demo/p2p-screen.html">P2P Screen Demo</a>
+  <a href="./demo/p2p-dynamic.html">P2P Dynamic Demo</a>
+  <a href="./demo/files.html">Files Demo</a>
+
   <h1>video-stream-merger demo</h1>
 
   <p>Merge and manipulate live video.</p>
@@ -14,29 +21,28 @@
 
 
   <h3>Composite videos</h3>
-  <video muted controls autoplay id="composite"></video>
+  <video id="composite" muted controls autoplay playsinline="playsinline" webkit-playsinline></video>
 
   <h3>Resize/Stretch</h3>
-  <video muted controls autoplay id="resizing"></video>
+  <video id="resizing" muted controls autoplay playsinline="playsinline" webkit-playsinline ></video>
 
   <h3>Crop/Zoom</h3>
-  <video muted controls autoplay id="cropping"></video>
+  <video id="cropping" muted controls autoplay playsinline="playsinline" webkit-playsinline></video>
 
   <h3>Custom effects</h3>
   <p>Unmute this video to hear a sine wave merged with the input sound.</p>
-  <video muted controls autoplay id="custom"></video>
+  <video id="custom" muted controls autoplay playsinline="playsinline" webkit-playsinline></video>
 
   <br><br>
 
 
   <script src="dist/video-stream-merger.js"></script>
-  <script src="demo/getusermedia.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
 
   <script>
     var players = document.querySelectorAll('video')
 
-    getusermedia({ video: true, audio: true }, function (err, mediaStream) {
-      if (err) throw err
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (mediaStream) {
 
       // Composite videos
       var composite = new VideoStreamMerger()

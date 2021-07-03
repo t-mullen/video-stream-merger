@@ -1,0 +1,23 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "plugins": [
+    "@typescript-eslint"
+  ],
+  "rules": {
+    "prefer-spread": 0,
+    "no-prototype-builtins": 0,
+    "prefer-rest-params": 0,
+    "no-constant-condition": 0,
+    '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '(event|reject|err|data)' }],
+    "@typescript-eslint/ban-ts-comment": 0,
+    "@typescript-eslint/no-this-alias": 0,
+    "@typescript-eslint/no-explicit-any": 0,
+    "@typescript-eslint/explicit-module-boundary-types": 0
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended"
+  ]
+}

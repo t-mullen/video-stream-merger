@@ -1,11 +1,13 @@
 <html lang="en">
 
 <head>
-  <link href="demo/style.css" rel="stylesheet" />
+  <title>P2P Dynamic Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=yes, viewport-fit=cover">
+  <link href="./style.css" rel="stylesheet" />
 </head>
 
 <body>
-  <h1>P2P Demo</h1>
+  <h1>P2P Dynamic Demo</h1>
 
   <p>Webcam stream is cloned to make several streams, which are merged together and sent over a single WebRTC
     MediaTrack.</p>
@@ -13,17 +15,28 @@
 
   <h3>Sending Peer</h3>
   <div class="wrapper">
-    <video muted autoplay id="one" style="display:inline-block; height: 100px; background:black;"></video>
+    <video id="one"
+        muted
+        controls
+        autoplay="autoplay"
+        playsinline="playsinline"
+        webkit-playsinline
+        style="display:inline-block; height: 100px; background:black;"></video>
   </div>
   <h3>Receiving Peer</h3>
   <div class="wrapper">
-    <video autoplay id="two" style="display:inline-block; height: 100px; background:black;"></video>
+    <video id="two"
+      controls
+      autoplay="autoplay"
+      playsinline="playsinline"
+      webkit-playsinline
+      style="display:inline-block; height: 100px; background:black;"></video>
   </div>
   <br>
   <button>Add Stream</button>
   <button>Remove Stream</button>
   <script src="./../dist/video-stream-merger.js"></script>
-  <script src="getusermedia.js"></script>
+  <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/simple-peer/7.0.0/simplepeer.min.js"></script>
   <script>
     var CANVAS_MULTIPLIER = 3
@@ -31,9 +44,7 @@
     var players = document.querySelectorAll('video')
     var buttons = document.querySelectorAll('button')
 
-    getusermedia({ audio: true, video: true }, function (err, webcam) {
-      if (err) throw err
-
+    navigator.mediaDevices.getUserMedia({ audio: true, video: true }).then(function (webcam) {
 
       const VIDEO_WIDTH = 400
       const VIDEO_HEIGHT = 300
