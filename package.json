@@ -1,6 +1,6 @@
 {
   "name": "video-stream-merger",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Create a composite from multiple MediaStreams.",
   "author": "Thomas Mullen",
   "license": "MIT",
