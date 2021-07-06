@@ -51,6 +51,7 @@ export interface AddStreamOptions {
   muted: boolean;
   draw: DrawFunction;
   audioEffect: AudioEffect;
+  keepRatio?: boolean;
 }
 
 /**
@@ -328,6 +329,7 @@ export class VideoStreamMerger {
     stream.mute = opts.mute || opts.muted || false;
     stream.audioEffect = opts.audioEffect || null;
     stream.index = opts.index == null ? 0 : opts.index;
+    stream.keepRatio = opts.keepRatio == null ? false : true;
     stream.hasVideo = mediaStream.getVideoTracks().length > 0;
     stream.hasAudio = mediaStream.getAudioTracks().length > 0;
 
@@ -528,17 +530,36 @@ export class VideoStreamMerger {
     const canvasHeight = this.height;
     const canvasWidth = this.width;
 
-    const height = stream.height || canvasHeight;
-    const width = stream.width || canvasWidth;
+    if (stream.keepRatio) {
 
-    let positionX = stream.x || 0;
-    let positionY = stream.y || 0;
+      const height = stream.height || element.videoHeight || canvasHeight;
+      const width = stream.width || element.videoWidth || canvasWidth;
+      const ratio  = Math.min ( canvasHeight / height, canvasWidth / width);
 
-    try {
-        this._ctx?.drawImage(element, positionX, positionY, width, height);
-    } catch (err) {
-      // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
-      console.error(err);
+      let positionX = ( canvasWidth - width * ratio ) / 2;
+      let positionY = ( canvasHeight - height * ratio ) / 2;
+
+      try {
+        this._ctx?.drawImage(element, 0, 0, width, height, positionX, positionY, width*ratio, height*ratio);
+      } catch (err) {
+        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
+        console.error(err);
+      }
+
+    } else {
+
+      const height = stream.height || canvasHeight;
+      const width = stream.width || canvasWidth;
+
+      let positionX = stream.x || 0;
+      let positionY = stream.y || 0;
+
+      try {
+          this._ctx?.drawImage(element, positionX, positionY, width, height);
+      } catch (err) {
+        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
+        console.error(err);
+      }
     }
   }
 

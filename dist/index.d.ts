@@ -40,6 +40,7 @@ export interface AddStreamOptions {
     muted: boolean;
     draw: DrawFunction;
     audioEffect: AudioEffect;
+    keepRatio?: boolean;
 }
 /**
  * Merges the video of multiple MediaStreams. Also merges the audio via the WebAudio API.
