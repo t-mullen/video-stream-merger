@@ -532,7 +532,7 @@ export class VideoStreamMerger {
     const width = stream.width || canvasWidth;
 
     let positionX = stream.x || 0;
-    let positionY = stream.Y || 0;
+    let positionY = stream.y || 0;
 
     try {
         this._ctx?.drawImage(element, positionX, positionY, width, height);
