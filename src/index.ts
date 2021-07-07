@@ -536,8 +536,8 @@ export class VideoStreamMerger {
       const width = stream.width || element.videoWidth || canvasWidth;
       const ratio  = Math.min ( canvasHeight / height, canvasWidth / width);
 
-      let positionX = ( canvasWidth - width * ratio ) / 2;
-      let positionY = ( canvasHeight - height * ratio ) / 2;
+      const positionX = ( canvasWidth - width * ratio ) / 2;
+      const positionY = ( canvasHeight - height * ratio ) / 2;
 
       try {
         this._ctx?.drawImage(element, 0, 0, width, height, positionX, positionY, width*ratio, height*ratio);
@@ -551,8 +551,8 @@ export class VideoStreamMerger {
       const height = stream.height || canvasHeight;
       const width = stream.width || canvasWidth;
 
-      let positionX = stream.x || 0;
-      let positionY = stream.y || 0;
+      const positionX = stream.x || 0;
+      const positionY = stream.y || 0;
 
       try {
           this._ctx?.drawImage(element, positionX, positionY, width, height);
