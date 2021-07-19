@@ -92,8 +92,7 @@ export class VideoStreamMerger {
   private _audioDestination: MediaStreamAudioDestinationNode | null = null;
   private _audioCtx: AudioContext | null = null;
 
-  constructor(options?: ConstructorOptions | undefined) {
-
+  constructor(options: Partial<ConstructorOptions> = {}) {
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     const audioSupport = !!(window.AudioContext && (new AudioContext()).createMediaStreamDestination);
     const canvasSupport = !!document.createElement('canvas').captureStream;
@@ -120,8 +119,7 @@ export class VideoStreamMerger {
     this._backgroundAudioHack();
   }
 
-  setOptions(options?: ConstructorOptions | undefined): void {
-    options = options || {} as ConstructorOptions;
+  setOptions(options: Partial<ConstructorOptions> = {}): void {
     this._audioCtx = (options.audioContext || new AudioContext());
     this.width = options.width || this.width;
     this.height = options.height || this.width;
