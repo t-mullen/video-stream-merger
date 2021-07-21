@@ -4,6 +4,10 @@
   "description": "Create a composite from multiple MediaStreams.",
   "author": "Thomas Mullen",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t-mullen/video-stream-merger"
+  },
   "source": "src/index.ts",
   "main": "dist/video-stream-merger.js",
   "types": "dist/index.d.ts",
