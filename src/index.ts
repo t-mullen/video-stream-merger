@@ -1,3 +1,5 @@
+import * as workerTimers from 'worker-timers';
+
 declare global {
   interface Window {
     AudioContext: AudioContext;
@@ -51,6 +53,7 @@ export interface AddStreamOptions {
   muted: boolean;
   draw: DrawFunction;
   audioEffect: AudioEffect;
+  keepRatio?: boolean;
 }
 
 /**
@@ -91,6 +94,7 @@ export class VideoStreamMerger {
   private _videoSyncDelayNode: DelayNode | null = null;
   private _audioDestination: MediaStreamAudioDestinationNode | null = null;
   private _audioCtx: AudioContext | null = null;
+  private _animationFrame: number | null = null;
 
   constructor(options?: ConstructorOptions | undefined) {
 
@@ -328,6 +332,7 @@ export class VideoStreamMerger {
     stream.mute = opts.mute || opts.muted || false;
     stream.audioEffect = opts.audioEffect || null;
     stream.index = opts.index == null ? 0 : opts.index;
+    stream.keepRatio = opts.keepRatio == null ? false : true;
     stream.hasVideo = mediaStream.getVideoTracks().length > 0;
     stream.hasAudio = mediaStream.getAudioTracks().length > 0;
 
@@ -423,23 +428,12 @@ export class VideoStreamMerger {
     this._sortStreams();
   }
 
-  // Wrapper around requestAnimationFrame and setInterval to avoid background throttling
-  private _requestAnimationFrame(callback: () => void) {
-    let fired = false;
-    const interval = setInterval(() => {
-      if (!fired && document.hidden) {
-        fired = true;
-        clearInterval(interval);
-        callback();
-      }
-    }, 1000 / this.fps);
-    requestAnimationFrame(() => {
-      if (!fired) {
-        fired = true;
-        clearInterval(interval);
-        callback();
-      }
-    });
+  _requestAnimationFrame(callback: () => void) {
+    return workerTimers.setTimeout(callback, 1000 / 60);
+  }
+
+  _cancelAnimationFrame(timeoutId: number) {
+    return workerTimers.clearTimeout(timeoutId);
   }
 
   /**
@@ -449,6 +443,8 @@ export class VideoStreamMerger {
    */
   start(): void {
 
+    this._audioCtx?.resume();
+
     // Hidden canvas element for merging
     this._canvas = document.createElement('canvas');
     this._canvas.setAttribute('width', this.width.toString());
@@ -457,7 +453,7 @@ export class VideoStreamMerger {
     this._ctx = this._canvas.getContext('2d');
 
     this.started = true;
-    this._requestAnimationFrame(this._draw.bind(this));
+    this._animationFrame = this._requestAnimationFrame(this._draw.bind(this));
 
     // Add video
     this.result = this._canvas?.captureStream(this.fps) || null;
@@ -528,17 +524,36 @@ export class VideoStreamMerger {
     const canvasHeight = this.height;
     const canvasWidth = this.width;
 
-    const height = stream.height || canvasHeight;
-    const width = stream.width || canvasWidth;
+    if (stream.keepRatio) {
 
-    let positionX = stream.x || 0;
-    let positionY = stream.y || 0;
+      const height = stream.height || element.videoHeight || canvasHeight;
+      const width = stream.width || element.videoWidth || canvasWidth;
+      const ratio  = Math.min ( canvasHeight / height, canvasWidth / width);
 
-    try {
-        this._ctx?.drawImage(element, positionX, positionY, width, height);
-    } catch (err) {
-      // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
-      console.error(err);
+      const positionX = ( canvasWidth - width * ratio ) / 2;
+      const positionY = ( canvasHeight - height * ratio ) / 2;
+
+      try {
+        this._ctx?.drawImage(element, 0, 0, width, height, positionX, positionY, width*ratio, height*ratio);
+      } catch (err) {
+        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
+        console.error(err);
+      }
+
+    } else {
+
+      const height = stream.height || canvasHeight;
+      const width = stream.width || canvasWidth;
+
+      const positionX = stream.x || 0;
+      const positionY = stream.y || 0;
+
+      try {
+          this._ctx?.drawImage(element, positionX, positionY, width, height);
+      } catch (err) {
+        // Ignore error possible "IndexSizeError (DOM Exception 1): The index is not in the allowed range." due Safari bug.
+        console.error(err);
+      }
     }
   }
 
@@ -556,10 +571,12 @@ export class VideoStreamMerger {
       }
     });
     this._streams = [];
-    this._audioCtx?.close();
-    this._audioCtx = null;
-    this._audioDestination = null;
-    this._videoSyncDelayNode = null;
+    this._audioCtx?.suspend();
+
+    if (this._animationFrame) {
+      this._cancelAnimationFrame(this._animationFrame)
+      this._animationFrame = null;
+    }
 
     this.result?.getTracks().forEach((t) => {
       t.stop();
@@ -569,6 +586,12 @@ export class VideoStreamMerger {
   }
 
   destroy() {
+
+    this._audioCtx?.close();
+    this._audioCtx = null;
+    this._audioDestination = null;
+    this._videoSyncDelayNode = null;
+
     this.stop();
   }
 }

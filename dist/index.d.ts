@@ -40,6 +40,7 @@ export interface AddStreamOptions {
     muted: boolean;
     draw: DrawFunction;
     audioEffect: AudioEffect;
+    keepRatio?: boolean;
 }
 /**
  * Merges the video of multiple MediaStreams. Also merges the audio via the WebAudio API.
@@ -74,6 +75,7 @@ export declare class VideoStreamMerger {
     private _videoSyncDelayNode;
     private _audioDestination;
     private _audioCtx;
+    private _animationFrame;
     constructor(options?: ConstructorOptions | undefined);
     setOptions(options?: ConstructorOptions | undefined): void;
     /**
@@ -122,7 +124,8 @@ export declare class VideoStreamMerger {
         id: string;
     }): void;
     private _addData;
-    private _requestAnimationFrame;
+    _requestAnimationFrame(callback: () => void): number;
+    _cancelAnimationFrame(timeoutId: number): void;
     /**
      * Start the merging and create merger.result.
      * You can call this any time, but you only need to call it once.

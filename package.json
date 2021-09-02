@@ -37,5 +37,8 @@
     "standard": "^8.6.0",
     "tape": "^4.6.3",
     "clean-webpack-plugin": "^4.0.0-alpha.0"
+  },
+  "dependencies": {
+    "worker-timers": "^7.0.37"
   }
 }
