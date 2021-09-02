@@ -1,3 +1,5 @@
+import * as workerTimers from 'worker-timers';
+
 declare global {
   interface Window {
     AudioContext: AudioContext;
@@ -92,6 +94,7 @@ export class VideoStreamMerger {
   private _videoSyncDelayNode: DelayNode | null = null;
   private _audioDestination: MediaStreamAudioDestinationNode | null = null;
   private _audioCtx: AudioContext | null = null;
+  private _animationFrame: number | null = null;
 
   constructor(options?: ConstructorOptions | undefined) {
 
@@ -425,23 +428,12 @@ export class VideoStreamMerger {
     this._sortStreams();
   }
 
-  // Wrapper around requestAnimationFrame and setInterval to avoid background throttling
-  private _requestAnimationFrame(callback: () => void) {
-    let fired = false;
-    const interval = setInterval(() => {
-      if (!fired && document.hidden) {
-        fired = true;
-        clearInterval(interval);
-        callback();
-      }
-    }, 1000 / this.fps);
-    requestAnimationFrame(() => {
-      if (!fired) {
-        fired = true;
-        clearInterval(interval);
-        callback();
-      }
-    });
+  _requestAnimationFrame(callback: () => void) {
+    return workerTimers.setTimeout(callback, 1000 / 60);
+  }
+
+  _cancelAnimationFrame(timeoutId: number) {
+    return workerTimers.clearTimeout(timeoutId);
   }
 
   /**
@@ -451,6 +443,8 @@ export class VideoStreamMerger {
    */
   start(): void {
 
+    this._audioCtx?.resume();
+
     // Hidden canvas element for merging
     this._canvas = document.createElement('canvas');
     this._canvas.setAttribute('width', this.width.toString());
@@ -459,7 +453,7 @@ export class VideoStreamMerger {
     this._ctx = this._canvas.getContext('2d');
 
     this.started = true;
-    this._requestAnimationFrame(this._draw.bind(this));
+    this._animationFrame = this._requestAnimationFrame(this._draw.bind(this));
 
     // Add video
     this.result = this._canvas?.captureStream(this.fps) || null;
@@ -577,10 +571,12 @@ export class VideoStreamMerger {
       }
     });
     this._streams = [];
-    this._audioCtx?.close();
-    this._audioCtx = null;
-    this._audioDestination = null;
-    this._videoSyncDelayNode = null;
+    this._audioCtx?.suspend();
+
+    if (this._animationFrame) {
+      this._cancelAnimationFrame(this._animationFrame)
+      this._animationFrame = null;
+    }
 
     this.result?.getTracks().forEach((t) => {
       t.stop();
@@ -590,6 +586,12 @@ export class VideoStreamMerger {
   }
 
   destroy() {
+
+    this._audioCtx?.close();
+    this._audioCtx = null;
+    this._audioDestination = null;
+    this._videoSyncDelayNode = null;
+
     this.stop();
   }
 }
