@@ -4,6 +4,10 @@
   "description": "Create a composite from multiple MediaStreams.",
   "author": "Thomas Mullen",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/t-mullen/video-stream-merger"
+  },
   "source": "src/index.ts",
   "main": "dist/video-stream-merger.js",
   "types": "dist/index.d.ts",
@@ -29,13 +33,13 @@
     "@typescript-eslint/eslint-plugin": "^4.2.0",
     "@typescript-eslint/parser": "^4.2.0",
     "awesome-typescript-loader": "^5.2.1",
+    "clean-webpack-plugin": "^4.0.0-alpha.0",
     "eslint": "^7.29.0",
     "http-server": "^0.12.3",
-    "typescript": "^3.9.7",
-    "webpack": "^5.41.0",
-    "webpack-cli": "^3.3.10",
     "standard": "^8.6.0",
     "tape": "^4.6.3",
-    "clean-webpack-plugin": "^4.0.0-alpha.0"
+    "typescript": "^4.3.5",
+    "webpack": "^5.45.1",
+    "webpack-cli": "^3.3.10"
   }
 }
