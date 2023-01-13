@@ -122,7 +122,7 @@ export class VideoStreamMerger {
   setOptions(options: Partial<ConstructorOptions> = {}): void {
     this._audioCtx = (options.audioContext || new AudioContext());
     this.width = options.width || this.width;
-    this.height = options.height || this.width;
+    this.height = options.height || this.height;
     this.fps = options.fps || this.fps;
     this.clearRect = options.clearRect === undefined ? true : options.clearRect;
   }
