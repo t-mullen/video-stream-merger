@@ -15,8 +15,6 @@ Merges the video of multiple MediaStreams. Also merges the audio via the WebAudi
 
 [Existing Files Demo](https://t-mullen.github.io/video-stream-merger/demo/files.html)
 
-Check out [WBS](https://github.com/t-mullen/Web-Broadcasting-Software), which uses this package.  
-
 ## install
 
 ```
